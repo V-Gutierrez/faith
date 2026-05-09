@@ -133,6 +133,8 @@ pub struct BookInfoOut {
 pub struct BookInfoBody {
     pub usfm: String,
     pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub book_name: Option<BookNames>,
     pub aliases: Vec<String>,
     pub chapters: u16,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -183,6 +185,7 @@ pub struct TranslationStatsOut {
     pub verses: u32,
     pub ot_verses: u32,
     pub nt_verses: u32,
+    pub installed_at: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -194,6 +197,14 @@ pub struct CacheStatsOut {
     pub manifest_bytes: u64,
     pub total_bytes: u64,
     pub path: String,
+}
+
+/// Generic structured message (used by `cache clear`, `cache path`, etc.).
+#[derive(Debug, Clone, Serialize)]
+pub struct MessageOut {
+    pub schema: &'static str,
+    pub kind: &'static str,
+    pub message: String,
 }
 
 pub fn tool_inventory_v1() -> Vec<ToolInfo> {

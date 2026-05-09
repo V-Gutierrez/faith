@@ -7,7 +7,7 @@ use std::io;
 use std::path::Path;
 
 use crate::error::FaithError;
-use crate::schema::CacheStatsOut;
+use crate::schema::{CacheStatsOut, MessageOut};
 
 /// Run cache subcommand.
 pub fn run(
@@ -77,11 +77,13 @@ fn clear(confirm: bool, out: &mut dyn std::io::Write) -> Result<i32, FaithError>
 
     if !cache_dir.exists() {
         // Idempotent: already cleared
-        let msg = format!(
-            "{{\"schema\":\"{}\",\"kind\":\"message\",\"message\":\"Cache dir not found (already cleared)\"}}",
-            crate::schema::SCHEMA_VERSION
-        );
-        writeln!(out, "{}", msg).map_err(|e| FaithError::Io(e.to_string()))?;
+        let msg = MessageOut {
+            schema: crate::schema::SCHEMA_VERSION,
+            kind: "message",
+            message: "Cache dir not found (already cleared)".into(),
+        };
+        serde_json::to_writer(&mut *out, &msg).map_err(|e| FaithError::Io(e.to_string()))?;
+        writeln!(out).map_err(|e| FaithError::Io(e.to_string()))?;
         return Ok(0);
     }
 
@@ -90,13 +92,13 @@ fn clear(confirm: bool, out: &mut dyn std::io::Write) -> Result<i32, FaithError>
         .map_err(|e| FaithError::Io(format!("failed to remove cache dir: {}", e)))?;
 
     let freed_mb = before as f64 / 1_000_000.0;
-    let msg = format!(
-        "{{\"schema\":\"{}\",\"kind\":\"message\",\"message\":\"Cleared {} (freed {:.1}MB)\"}}",
-        crate::schema::SCHEMA_VERSION,
-        cache_dir.display(),
-        freed_mb
-    );
-    writeln!(out, "{}", msg).map_err(|e| FaithError::Io(e.to_string()))?;
+    let msg = MessageOut {
+        schema: crate::schema::SCHEMA_VERSION,
+        kind: "message",
+        message: format!("Cleared {} (freed {:.1}MB)", cache_dir.display(), freed_mb),
+    };
+    serde_json::to_writer(&mut *out, &msg).map_err(|e| FaithError::Io(e.to_string()))?;
+    writeln!(out).map_err(|e| FaithError::Io(e.to_string()))?;
 
     Ok(0)
 }

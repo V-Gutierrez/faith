@@ -88,6 +88,7 @@ fn build_app() -> Command {
         .subcommand(
             Command::new("random")
                 .arg(Arg::new("tr").long("tr"))
+                .arg(Arg::new("lang").long("lang"))
                 .arg(Arg::new("book").long("book"))
                 .arg(Arg::new("scope").long("scope"))
                 .arg(Arg::new("seed").long("seed")),
@@ -104,4 +105,17 @@ fn build_app() -> Command {
         )
         .subcommand(Command::new("stats").arg(Arg::new("tr").long("tr")))
         .subcommand(Command::new("completions").arg(Arg::new("shell").required(true)))
+        .subcommand(
+            Command::new("cache")
+                .subcommand_required(true)
+                .subcommand(Command::new("size"))
+                .subcommand(
+                    Command::new("clear").arg(
+                        Arg::new("confirm")
+                            .long("confirm")
+                            .action(ArgAction::SetTrue),
+                    ),
+                )
+                .subcommand(Command::new("path")),
+        )
 }

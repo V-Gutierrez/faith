@@ -19,17 +19,33 @@ pub enum Scope {
 
 /// Run the `random` subcommand. `seed` overrides the default seed source
 /// (env `FAITH_SEED` or wall-clock nanos) for deterministic output.
+///
+/// Resolution priority: `--tr` > `--lang` > default `KJV`.
+/// `--lang` accepts ISO 639-2 (`pt`, `en`) or ISO 639-3 (`por`, `eng`).
 pub fn run<W: Write>(
     store: &Store,
     translation: Option<&str>,
+    lang: Option<&str>,
     book: Option<&str>,
     scope: Scope,
     seed: Option<u64>,
     format: OutputFormat,
     out: &mut W,
 ) -> Result<i32> {
-    let alias = translation.unwrap_or("KJV");
-    let def = match resolve_translation(alias) {
+    let alias = match (translation, lang) {
+        (Some(t), _) => t.to_string(),
+        (None, Some(l)) => match resolve_by_lang(l) {
+            Some(a) => a.to_string(),
+            None => {
+                let e = FaithError::TranslationMissing {
+                    translation: format!("no translation found for lang '{l}'"),
+                };
+                return emit_err(out, &e, format);
+            }
+        },
+        _ => "KJV".to_string(),
+    };
+    let def = match resolve_translation(&alias) {
         Ok(d) => d,
         Err(e) => return emit_err(out, &e, format),
     };
@@ -141,4 +157,28 @@ fn default_seed() -> u64 {
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_nanos() as u64)
         .unwrap_or(0xCAFE_BABE_DEAD_BEEF)
+}
+
+/// Resolve a language code (ISO 639-2 like `pt` or ISO 639-3 like `por`)
+/// to the first matching translation alias in the catalog.
+fn resolve_by_lang(lang: &str) -> Option<&'static str> {
+    let lower = lang.to_ascii_lowercase();
+    // Try direct match on iso3 (catalog stores iso3: "eng", "por")
+    if let Some(t) = translations::CATALOG.iter().find(|t| t.language == lower) {
+        return Some(t.alias);
+    }
+    // Try iso2 → iso3 conversion then match
+    let iso3 = match lower.as_str() {
+        "en" => "eng",
+        "pt" => "por",
+        "es" => "spa",
+        "fr" => "fra",
+        "de" => "deu",
+        "he" => "heb",
+        _ => return None,
+    };
+    translations::CATALOG
+        .iter()
+        .find(|t| t.language == iso3)
+        .map(|t| t.alias)
 }

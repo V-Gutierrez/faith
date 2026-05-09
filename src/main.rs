@@ -69,6 +69,8 @@ enum Cmd {
         #[arg(long)]
         tr: Option<String>,
         #[arg(long)]
+        lang: Option<String>,
+        #[arg(long)]
         book: Option<String>,
         #[arg(long, value_enum, default_value_t = ScopeArg::All)]
         scope: ScopeArg,
@@ -195,6 +197,7 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
         }
         Cmd::Random {
             tr,
+            lang,
             book,
             scope,
             seed,
@@ -209,6 +212,7 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
             cli::random::run(
                 &store,
                 tr.as_deref(),
+                lang.as_deref(),
                 book.as_deref(),
                 s,
                 seed,

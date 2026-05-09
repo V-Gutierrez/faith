@@ -54,6 +54,10 @@ pub fn run<W: Write>(
     let body = BookInfoBody {
         usfm: entry.canonical_id.to_string(),
         name: entry.name_en.to_string(),
+        book_name: Some(crate::schema::BookNames {
+            en: Some(entry.name_en.to_string()),
+            pt: Some(entry.name_pt.to_string()),
+        }),
         aliases: books::aliases_lower(entry),
         chapters: entry.chapters,
         verses_total,

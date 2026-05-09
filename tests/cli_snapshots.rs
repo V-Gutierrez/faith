@@ -222,6 +222,7 @@ fn random_deterministic_with_seed_snapshot() {
         &s,
         Some("KJV"),
         None,
+        None,
         cli::random::Scope::All,
         Some(42),
         OutputFormat::Json,
@@ -241,6 +242,7 @@ fn random_same_seed_same_output() {
         &s,
         Some("KJV"),
         None,
+        None,
         cli::random::Scope::All,
         Some(7),
         OutputFormat::Json,
@@ -250,6 +252,7 @@ fn random_same_seed_same_output() {
     cli::random::run(
         &s,
         Some("KJV"),
+        None,
         None,
         cli::random::Scope::All,
         Some(7),
@@ -268,6 +271,7 @@ fn random_book_scoped_returns_only_that_book() {
         cli::random::run(
             &s,
             Some("KJV"),
+            None,
             Some("PSA"),
             cli::random::Scope::All,
             Some(seed),
@@ -289,6 +293,7 @@ fn random_nt_scope_excludes_ot_books() {
             &s,
             Some("KJV"),
             None,
+            None,
             cli::random::Scope::Nt,
             Some(seed),
             OutputFormat::Json,
@@ -307,6 +312,7 @@ fn random_unknown_translation_errors() {
     let code = cli::random::run(
         &s,
         Some("XYZ"),
+        None,
         None,
         cli::random::Scope::All,
         Some(1),
@@ -570,6 +576,7 @@ fn random_tsv_emits_single_row() {
     let code = cli::random::run(
         &s,
         Some("KJV"),
+        None,
         None,
         cli::random::Scope::All,
         Some(42),

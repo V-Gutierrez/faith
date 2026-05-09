@@ -75,6 +75,8 @@ fn emit_translation<W: Write>(store: &Store, alias: &str, out: &mut W) -> Result
         }
     }
 
+    let installed_at = store.translation_installed_at(def.alias)?;
+
     let s = TranslationStatsOut {
         schema: SCHEMA_VERSION,
         kind: "stats.translation",
@@ -85,6 +87,7 @@ fn emit_translation<W: Write>(store: &Store, alias: &str, out: &mut W) -> Result
         verses: total,
         ot_verses: ot,
         nt_verses: nt,
+        installed_at,
     };
     serde_json::to_writer(&mut *out, &s)?;
     writeln!(out)?;

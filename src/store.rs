@@ -376,6 +376,17 @@ impl Store {
         )?;
         Ok(n as u32)
     }
+
+    /// `installed_at` timestamp for a translation (ISO 8601 string).
+    pub fn translation_installed_at(&self, translation: &str) -> Result<String> {
+        self.require_translation(translation)?;
+        let ts: String = self.conn.query_row(
+            "SELECT installed_at FROM translations WHERE id=?1",
+            params![translation],
+            |row| row.get(0),
+        )?;
+        Ok(ts)
+    }
 }
 
 pub fn default_db_path() -> Result<PathBuf> {

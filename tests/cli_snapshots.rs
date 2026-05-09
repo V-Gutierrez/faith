@@ -205,6 +205,106 @@ fn info_unknown_translation_returns_missing_error() {
 }
 
 #[test]
+fn random_deterministic_with_seed_snapshot() {
+    let (s, _d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::random::run(
+        &s,
+        Some("KJV"),
+        None,
+        cli::random::Scope::All,
+        Some(42),
+        &mut buf,
+    )
+    .unwrap();
+    assert_eq!(code, 0);
+    insta::assert_snapshot!(String::from_utf8(buf.into_inner()).unwrap());
+}
+
+#[test]
+fn random_same_seed_same_output() {
+    let (s, _d) = fresh_store();
+    let mut a = Cursor::new(Vec::<u8>::new());
+    let mut b = Cursor::new(Vec::<u8>::new());
+    cli::random::run(
+        &s,
+        Some("KJV"),
+        None,
+        cli::random::Scope::All,
+        Some(7),
+        &mut a,
+    )
+    .unwrap();
+    cli::random::run(
+        &s,
+        Some("KJV"),
+        None,
+        cli::random::Scope::All,
+        Some(7),
+        &mut b,
+    )
+    .unwrap();
+    assert_eq!(a.into_inner(), b.into_inner());
+}
+
+#[test]
+fn random_book_scoped_returns_only_that_book() {
+    let (s, _d) = fresh_store();
+    for seed in 0u64..20 {
+        let mut buf = Cursor::new(Vec::<u8>::new());
+        cli::random::run(
+            &s,
+            Some("KJV"),
+            Some("PSA"),
+            cli::random::Scope::All,
+            Some(seed),
+            &mut buf,
+        )
+        .unwrap();
+        let out = String::from_utf8(buf.into_inner()).unwrap();
+        assert!(out.contains("\"book\":\"PSA\""), "seed {seed}: {out}");
+    }
+}
+
+#[test]
+fn random_nt_scope_excludes_ot_books() {
+    let (s, _d) = fresh_store();
+    for seed in 0u64..20 {
+        let mut buf = Cursor::new(Vec::<u8>::new());
+        cli::random::run(
+            &s,
+            Some("KJV"),
+            None,
+            cli::random::Scope::Nt,
+            Some(seed),
+            &mut buf,
+        )
+        .unwrap();
+        let out = String::from_utf8(buf.into_inner()).unwrap();
+        assert!(!out.contains("\"book\":\"PSA\""), "seed {seed}: {out}");
+    }
+}
+
+#[test]
+fn random_unknown_translation_errors() {
+    let (s, _d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::random::run(
+        &s,
+        Some("XYZ"),
+        None,
+        cli::random::Scope::All,
+        Some(1),
+        &mut buf,
+    )
+    .unwrap();
+    assert_eq!(code, 4);
+    assert!(String::from_utf8(buf.into_inner())
+        .unwrap()
+        .contains("E_TRANSLATION_MISSING"));
+}
+
+#[test]
 fn manifest_snapshot() {
     let (s, _d) = fresh_store();
     let mut buf = Cursor::new(Vec::<u8>::new());

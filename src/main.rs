@@ -49,6 +49,23 @@ enum Cmd {
         #[arg(long)]
         tr: Option<String>,
     },
+    Random {
+        #[arg(long)]
+        tr: Option<String>,
+        #[arg(long)]
+        book: Option<String>,
+        #[arg(long, value_enum, default_value_t = ScopeArg::All)]
+        scope: ScopeArg,
+        #[arg(long)]
+        seed: Option<u64>,
+    },
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum ScopeArg {
+    All,
+    Ot,
+    Nt,
 }
 
 #[derive(Debug, Subcommand)]
@@ -132,6 +149,20 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
         Cmd::Info { book, tr } => {
             let store = Store::open(&path)?;
             cli::info::run(&store, &book, tr.as_deref(), &mut out)
+        }
+        Cmd::Random {
+            tr,
+            book,
+            scope,
+            seed,
+        } => {
+            let store = Store::open(&path)?;
+            let s = match scope {
+                ScopeArg::All => cli::random::Scope::All,
+                ScopeArg::Ot => cli::random::Scope::Ot,
+                ScopeArg::Nt => cli::random::Scope::Nt,
+            };
+            cli::random::run(&store, tr.as_deref(), book.as_deref(), s, seed, &mut out)
         }
     }
 }

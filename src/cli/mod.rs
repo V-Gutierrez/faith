@@ -15,11 +15,20 @@ pub mod info;
 pub mod install;
 pub mod list;
 pub mod manifest;
+pub mod random;
 
 pub fn resolve_translation(alias: &str) -> Result<&'static TranslationDef> {
     translations::by_alias(alias).ok_or_else(|| FaithError::TranslationMissing {
         translation: alias.to_string(),
     })
+}
+
+pub fn info_canonical_book(input: &str) -> Option<String> {
+    if let Some(b) = books::by_canonical_id(input) {
+        return Some(b.canonical_id.to_string());
+    }
+    let key = crate::reference::normalize(input);
+    books::alias_index().get(&key).map(|c| c.to_string())
 }
 
 pub fn lookup(store: &Store, parsed: &ParsedRef, def: &TranslationDef) -> LookupOut {

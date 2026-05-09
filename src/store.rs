@@ -264,6 +264,80 @@ impl Store {
         Ok(n as u32)
     }
 
+    /// Pick a single verse uniformly at random from a (translation, optional
+    /// book filter, optional book-allowlist) population using a caller-provided
+    /// `nth` index. Returns `Ok(None)` if the population is empty.
+    ///
+    /// `book_in` lets the caller restrict to OT/NT (passed as USFM IDs). When
+    /// both `book` and `book_in` are `None` the whole translation is sampled.
+    pub fn random_verse(
+        &self,
+        translation: &str,
+        book: Option<&str>,
+        book_in: Option<&[&str]>,
+        nth: u64,
+    ) -> Result<Option<(String, u16, u16, String)>> {
+        self.require_translation(translation)?;
+        let (where_extra, params_extra): (String, Vec<rusqlite::types::Value>) =
+            match (book, book_in) {
+                (Some(b), _) => (
+                    " AND book = ?2".to_string(),
+                    vec![rusqlite::types::Value::Text(b.to_string())],
+                ),
+                (None, Some(list)) if !list.is_empty() => {
+                    let placeholders: Vec<String> =
+                        (2..2 + list.len()).map(|i| format!("?{i}")).collect();
+                    (
+                        format!(" AND book IN ({})", placeholders.join(",")),
+                        list.iter()
+                            .map(|s| rusqlite::types::Value::Text((*s).to_string()))
+                            .collect(),
+                    )
+                }
+                _ => (String::new(), Vec::new()),
+            };
+
+        let count_sql = format!("SELECT COUNT(*) FROM verses WHERE translation = ?1{where_extra}");
+        let mut count_params: Vec<rusqlite::types::Value> =
+            vec![rusqlite::types::Value::Text(translation.to_string())];
+        count_params.extend(params_extra.iter().cloned());
+        let total: i64 = self.conn.query_row(
+            &count_sql,
+            rusqlite::params_from_iter(count_params.iter()),
+            |row| row.get(0),
+        )?;
+        if total == 0 {
+            return Ok(None);
+        }
+
+        let offset = (nth % total as u64) as i64;
+        let select_sql = format!(
+            "SELECT book, chapter, verse, text FROM verses
+             WHERE translation = ?1{where_extra}
+             ORDER BY book, chapter, verse
+             LIMIT 1 OFFSET ?{}",
+            2 + params_extra.len()
+        );
+        let mut select_params: Vec<rusqlite::types::Value> =
+            vec![rusqlite::types::Value::Text(translation.to_string())];
+        select_params.extend(params_extra.iter().cloned());
+        select_params.push(rusqlite::types::Value::Integer(offset));
+
+        let row = self.conn.query_row(
+            &select_sql,
+            rusqlite::params_from_iter(select_params.iter()),
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, u16>(1)?,
+                    row.get::<_, u16>(2)?,
+                    row.get::<_, String>(3)?,
+                ))
+            },
+        )?;
+        Ok(Some(row))
+    }
+
     pub fn list_books(&self, translation: &str) -> Result<Vec<String>> {
         self.require_translation(translation)?;
         let mut stmt = self

@@ -68,6 +68,9 @@ enum Cmd {
         #[arg(long)]
         tr: Option<String>,
     },
+    Completions {
+        shell: String,
+    },
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -182,5 +185,6 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
             let dir = store::data_dir()?;
             cli::stats::run(&store, tr.as_deref(), &dir, &mut out)
         }
+        Cmd::Completions { shell } => cli::completions::run(&shell, &mut out),
     }
 }

@@ -390,6 +390,55 @@ fn stats_unknown_translation_returns_translation_missing() {
 }
 
 #[test]
+fn completions_bash_emits_complete_function() {
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::completions::run("bash", &mut buf).unwrap();
+    assert_eq!(code, 0);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    assert!(
+        out.contains("complete -F"),
+        "stdout head: {}",
+        &out[..out.len().min(200)]
+    );
+    assert!(out.contains("faith"));
+}
+
+#[test]
+fn completions_zsh_emits_compdef() {
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::completions::run("zsh", &mut buf).unwrap();
+    assert_eq!(code, 0);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    assert!(
+        out.contains("#compdef faith"),
+        "stdout head: {}",
+        &out[..out.len().min(200)]
+    );
+}
+
+#[test]
+fn completions_fish_works() {
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::completions::run("fish", &mut buf).unwrap();
+    assert_eq!(code, 0);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    assert!(
+        out.contains("complete -c faith"),
+        "stdout head: {}",
+        &out[..out.len().min(200)]
+    );
+}
+
+#[test]
+fn completions_unknown_shell_returns_ref_parse_error() {
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::completions::run("tcsh", &mut buf).unwrap();
+    assert_eq!(code, 2);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    assert!(out.contains("E_REF_PARSE"), "stdout: {out}");
+}
+
+#[test]
 fn manifest_snapshot() {
     let (s, _d) = fresh_store();
     let mut buf = Cursor::new(Vec::<u8>::new());

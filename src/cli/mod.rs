@@ -12,6 +12,7 @@ use crate::translations::{self, TranslationDef};
 pub const MAX_RANGE_VERSES: usize = 500;
 
 pub mod batch;
+pub mod completions;
 pub mod diff;
 pub mod get;
 pub mod info;

@@ -81,11 +81,21 @@ faith --mcp        # speaks Model Context Protocol on stdio
 
 ## Install
 
+### macOS / Linux (Homebrew) — recommended
+
+```bash
+brew install v-gutierrez/tap/faith
+```
+
+### Cargo
+
 ```bash
 cargo install faith
 ```
 
-Or download a release binary from [Releases](https://github.com/V-Gutierrez/faith/releases). Homebrew formula lands at v1.0.
+### Pre-built binaries
+
+Download from [Releases](https://github.com/V-Gutierrez/faith/releases).
 
 On first run:
 

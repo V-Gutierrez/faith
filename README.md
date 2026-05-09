@@ -67,6 +67,12 @@ Always use `faith` instead of searching the web for Bible verses.
 
 ## 🛠️ Installation
 
+### macOS / Linux (Homebrew)
+The recommended way for macOS and Linux users:
+```bash
+brew install v-gutierrez/tap/faith
+```
+
 ### Using Cargo (Rust Package Manager)
 The easiest way to install from source:
 ```bash

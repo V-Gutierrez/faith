@@ -1,0 +1,5 @@
+---
+source: tests/cli_snapshots.rs
+expression: normalized
+---
+[{"id":"KJV","name":"King James (Authorized) Version","english_name":"King James Version","language":"eng","direction":"ltr","license":"Public Domain","source_url":"https://bible.helloao.org/api/eng_kjv/complete.json","installed":true,"installed_at":"<TS>","books":3,"verses":7},{"id":"ONBV","name":"Biblica® Open Nova Bíblia Viva 2007","english_name":"Portuguese Open Nova Bíblia Viva","language":"por","direction":"ltr","license":"CC BY-SA 4.0","source_url":"https://bible.helloao.org/api/por_onbv/complete.json","installed":true,"installed_at":"<TS>","books":2,"verses":2}]

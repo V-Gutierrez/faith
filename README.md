@@ -23,7 +23,7 @@ Existing Bible CLIs are human-first: TUIs, themes, pagination, decoration. Agent
 
 ## Status
 
-Pre-alpha. Spec frozen at v0.1, see [`docs/SPEC.md`](docs/SPEC.md). v0.1 ships `get`, `batch`, `list`, `manifest` against KJV + NVI seed.
+Pre-alpha. Spec frozen at v0.1, see [`docs/SPEC.md`](docs/SPEC.md). v0.1 ships `get`, `batch`, `list`, `manifest` against **KJV + ONBV** seed (NVI is non-redistributable; see [ADR-001](docs/ADR-001-nvi-substitution.md)).
 
 ## Install
 
@@ -36,7 +36,7 @@ Or download a release binary from [Releases](https://github.com/V-Gutierrez/fait
 On first run:
 
 ```bash
-faith install kjv nvi      # downloads selected translations into ~/.faith/
+faith install KJV ONBV     # downloads selected translations into ~/.faith/
 faith manifest             # confirms what is available
 ```
 
@@ -48,17 +48,17 @@ faith get "John 3:16" --tr KJV
 # → {"schema":"faith.v1","ref":"KJV/JHN/3/16","text":"For God so loved..."}
 
 # Same passage, several translations (parallel, one call)
-faith get "John 3:16" --tr KJV,NVI,SBLGNT
+faith get "John 3:16" --tr KJV,ONBV
 
 # Batch from stdin
-echo '["John 3:16","Romans 8:28","Ps 23"]' | faith batch --tr NVI
+echo '["John 3:16","Romans 8:28","Ps 23"]' | faith batch --tr ONBV
 
-# Search
-faith search "love your enemies" --tr KJV --limit 5
+# Search (v0.2)
+# faith search "love your enemies" --tr KJV --limit 5
 
 # Inventory
 faith list translations
-faith list books --tr NVI
+faith list books --tr ONBV
 
 # Capability manifest (what an agent should call before anything else)
 faith manifest
@@ -108,7 +108,7 @@ Seeded from the [Free Use Bible API](https://bible.helloao.org) (HelloAOLab) —
 
 ## Roadmap
 
-- **v0.1** — `get`, `batch`, `list`, `manifest`, KJV + NVI seed
+- **v0.1** — `get`, `batch`, `list`, `manifest`, **KJV + ONBV** seed ([ADR-001](docs/ADR-001-nvi-substitution.md))
 - **v0.2** — FTS5 search, multi-translation
 - **v0.3** — `parallel` (multi-locale), `--mcp` server mode
 - **v0.4** — Semantic search via local embeddings (`sqlite-vec` + ONNX MiniLM, opt-in)

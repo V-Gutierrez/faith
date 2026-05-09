@@ -1,0 +1,5 @@
+---
+source: tests/cli_snapshots.rs
+expression: out
+---
+{"schema":"faith.v1","ref":"KJV/JHN/3/16-18","translation":"KJV","book":"JHN","book_name":{"en":"John","pt":"João"},"chapter":3,"lang":"en","dir":"ltr","verses":[{"chapter":3,"verse":16,"text":"For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life."},{"chapter":3,"verse":17,"text":"For God sent not his Son into the world to condemn the world; but that the world through him might be saved."},{"chapter":3,"verse":18,"text":"He that believeth on him is not condemned."}]}

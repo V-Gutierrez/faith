@@ -1,0 +1,5 @@
+---
+source: tests/cli_snapshots.rs
+expression: out
+---
+{"schema":"faith.v1","ref":"KJV/PSA/23","translation":"KJV","book":"PSA","book_name":{"en":"Psalms","pt":"Salmos"},"chapter":23,"lang":"en","dir":"ltr","verses":[{"chapter":23,"verse":1,"text":"The LORD is my shepherd; I shall not want."}]}

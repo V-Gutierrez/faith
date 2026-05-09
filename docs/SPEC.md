@@ -208,7 +208,7 @@ Required RED tests before any v0.1 production code:
 
 ## B — Backlog
 
-- **v0.1** — `get`, `batch`, `list`, `install`, `manifest`; KJV + NVI seed
+- **v0.1** — `get`, `batch`, `list`, `install`, `manifest`; KJV + ONBV seed (NVI dropped, see [ADR-001](./ADR-001-nvi-substitution.md))
 - **v0.2** — `search` (FTS5), multi-tr search, `--limit`, criterion benches
 - **v0.3** — `parallel` (multi-locale ergonomics), `--mcp` JSON-RPC stdin/stdout, MCP tool surface documented
 - **v0.4** — Semantic search: `sqlite-vec` + ONNX MiniLM via `ort`, opt-in, `--semantic` flag

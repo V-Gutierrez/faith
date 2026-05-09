@@ -1,0 +1,5 @@
+---
+source: tests/cli_snapshots.rs
+expression: normalized
+---
+{"schema":"faith.v1","version":"<VER>","data_dir":"<PATH>","translations":[{"id":"KJV","name":"King James (Authorized) Version","english_name":"King James Version","language":"eng","direction":"ltr","books":3,"verses":7,"license":"Public Domain","source_url":"https://bible.helloao.org/api/eng_kjv/complete.json","installed_at":"<TS>"},{"id":"ONBV","name":"Biblica® Open Nova Bíblia Viva 2007","english_name":"Portuguese Open Nova Bíblia Viva","language":"por","direction":"ltr","books":2,"verses":2,"license":"CC BY-SA 4.0","source_url":"https://bible.helloao.org/api/por_onbv/complete.json","installed_at":"<TS>"}],"tools":[{"name":"get","args":["ref","tr?"]},{"name":"batch","args":["tr?","stdin: refs[]"]},{"name":"list","args":["kind"]},{"name":"install","args":["tr+"]},{"name":"manifest","args":[]}]}

@@ -1,0 +1,5 @@
+---
+source: tests/cli_snapshots.rs
+expression: out
+---
+{"schema":"faith.v1","ref":"KJV/JHN/3/18-4/2","translation":"KJV","book":"JHN","book_name":{"en":"John","pt":"João"},"lang":"en","dir":"ltr","verses":[{"chapter":3,"verse":18,"text":"He that believeth on him is not condemned."},{"chapter":4,"verse":1,"text":"When therefore the Lord knew how the Pharisees had heard..."},{"chapter":4,"verse":2,"text":"(Though Jesus himself baptized not, but his disciples,)"}]}

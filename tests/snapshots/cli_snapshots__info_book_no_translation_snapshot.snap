@@ -1,0 +1,5 @@
+---
+source: tests/cli_snapshots.rs
+expression: "String::from_utf8(buf.into_inner()).unwrap()"
+---
+{"schema":"faith.v1","kind":"book_info","book":{"usfm":"JHN","name":"John","aliases":["john","jhn","jn","joh","jo","joão","joao"],"chapters":21,"testament":"NT","order":43}}

@@ -11,6 +11,7 @@ use crate::translations::{self, TranslationDef};
 
 pub mod batch;
 pub mod get;
+pub mod info;
 pub mod install;
 pub mod list;
 pub mod manifest;

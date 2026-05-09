@@ -249,6 +249,21 @@ impl Store {
         }
     }
 
+    /// Count verses for a single book within an installed translation.
+    ///
+    /// Translation must exist; returns `0` if the book is absent (the caller
+    /// decides how to surface that — `info` reports `0`, others may treat as
+    /// not-found).
+    pub fn book_verse_count(&self, translation: &str, book: &str) -> Result<u32> {
+        self.require_translation(translation)?;
+        let n: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM verses WHERE translation=?1 AND book=?2",
+            params![translation, book],
+            |row| row.get(0),
+        )?;
+        Ok(n as u32)
+    }
+
     pub fn list_books(&self, translation: &str) -> Result<Vec<String>> {
         self.require_translation(translation)?;
         let mut stmt = self

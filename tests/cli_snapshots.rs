@@ -167,6 +167,44 @@ fn list_books_snapshot() {
 }
 
 #[test]
+fn info_book_no_translation_snapshot() {
+    let (s, _d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::info::run(&s, "JHN", None, &mut buf).unwrap();
+    assert_eq!(code, 0);
+    insta::assert_snapshot!(String::from_utf8(buf.into_inner()).unwrap());
+}
+
+#[test]
+fn info_book_with_translation_snapshot() {
+    let (s, _d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::info::run(&s, "JHN", Some("KJV"), &mut buf).unwrap();
+    assert_eq!(code, 0);
+    insta::assert_snapshot!(String::from_utf8(buf.into_inner()).unwrap());
+}
+
+#[test]
+fn info_unknown_book_returns_parse_error() {
+    let (s, _d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::info::run(&s, "ZZZ", None, &mut buf).unwrap();
+    assert_eq!(code, 2);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    assert!(out.contains("E_REF_PARSE"), "stdout: {out}");
+}
+
+#[test]
+fn info_unknown_translation_returns_missing_error() {
+    let (s, _d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::info::run(&s, "JHN", Some("XYZ"), &mut buf).unwrap();
+    assert_eq!(code, 4);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    assert!(out.contains("E_TRANSLATION_MISSING"), "stdout: {out}");
+}
+
+#[test]
 fn manifest_snapshot() {
     let (s, _d) = fresh_store();
     let mut buf = Cursor::new(Vec::<u8>::new());

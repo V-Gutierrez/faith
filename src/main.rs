@@ -44,6 +44,11 @@ enum Cmd {
         translations: Vec<String>,
     },
     Manifest,
+    Info {
+        book: String,
+        #[arg(long)]
+        tr: Option<String>,
+    },
 }
 
 #[derive(Debug, Subcommand)]
@@ -123,6 +128,10 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
         Cmd::Manifest => {
             let store = Store::open(&path)?;
             cli::manifest::run(&store, &mut out)
+        }
+        Cmd::Info { book, tr } => {
+            let store = Store::open(&path)?;
+            cli::info::run(&store, &book, tr.as_deref(), &mut out)
         }
     }
 }

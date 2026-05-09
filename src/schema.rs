@@ -120,6 +120,82 @@ pub struct ToolInfo {
     pub args: Vec<String>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct BookInfoOut {
+    pub schema: &'static str,
+    pub kind: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub translation: Option<String>,
+    pub book: BookInfoBody,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct BookInfoBody {
+    pub usfm: String,
+    pub name: String,
+    pub aliases: Vec<String>,
+    pub chapters: u16,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verses_total: Option<u32>,
+    pub testament: &'static str,
+    pub order: u8,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DiffOut {
+    pub schema: &'static str,
+    pub kind: &'static str,
+    #[serde(rename = "ref")]
+    pub reference: String,
+    pub translations: Vec<DiffEntry>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DiffEntry {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verses: Option<Vec<VerseLite>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<ErrorBody>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct GlobalStatsOut {
+    pub schema: &'static str,
+    pub kind: &'static str,
+    pub translations_installed: u16,
+    pub total_verses: u64,
+    pub db_size_bytes: u64,
+    pub cache_size_bytes: u64,
+    pub manifest_last_updated: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct TranslationStatsOut {
+    pub schema: &'static str,
+    pub kind: &'static str,
+    pub translation: String,
+    pub language: String,
+    pub books: u16,
+    pub chapters: u16,
+    pub verses: u32,
+    pub ot_verses: u32,
+    pub nt_verses: u32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CacheStatsOut {
+    pub schema: &'static str,
+    pub kind: &'static str,
+    pub db_bytes: u64,
+    pub cache_bytes: u64,
+    pub manifest_bytes: u64,
+    pub total_bytes: u64,
+    pub path: String,
+}
+
 pub fn tool_inventory_v1() -> Vec<ToolInfo> {
     vec![
         ToolInfo {
@@ -141,6 +217,30 @@ pub fn tool_inventory_v1() -> Vec<ToolInfo> {
         ToolInfo {
             name: "manifest".into(),
             args: vec![],
+        },
+        ToolInfo {
+            name: "info".into(),
+            args: vec!["book".into(), "tr?".into()],
+        },
+        ToolInfo {
+            name: "random".into(),
+            args: vec!["tr?".into(), "book?".into(), "scope?".into()],
+        },
+        ToolInfo {
+            name: "diff".into(),
+            args: vec!["ref".into(), "tr+".into()],
+        },
+        ToolInfo {
+            name: "stats".into(),
+            args: vec!["tr?".into()],
+        },
+        ToolInfo {
+            name: "completions".into(),
+            args: vec!["shell".into()],
+        },
+        ToolInfo {
+            name: "cache".into(),
+            args: vec!["sub".into()],
         },
     ]
 }

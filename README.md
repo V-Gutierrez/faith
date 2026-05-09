@@ -104,15 +104,43 @@ faith get "John 3:16" --tr KJV
 # Same passage, several translations (parallel, one call)
 faith get "John 3:16" --tr KJV,ONBV
 
+# Range (cross-chapter supported)
+faith get "John 3:16-4:2" --tr KJV
+
 # Batch from stdin
 echo '["John 3:16","Romans 8:28","Ps 23"]' | faith batch --tr ONBV
 
-# Search (v0.2)
-# faith search "love your enemies" --tr KJV --limit 5
+# Random verse (with deterministic seed for reproducibility)
+faith random --tr KJV --seed 42
+faith random --tr KJV --book PSA --scope ot  # random psalm
+
+# Compare translations side-by-side
+faith diff "John 3:16" --tr KJV,ONBV,NBVP
+
+# Book metadata
+faith info john --tr KJV
+# → {"book":{"usfm":"JHN","name":"John","chapters":21,"verses_total":879,...}}
+
+# Statistics
+faith stats                   # global
+faith stats --tr KJV         # per-translation
+
+# Tabular output (TSV/CSV)
+faith get "John 1:1-5" --tr KJV --format tsv
+faith list books --tr KJV --format csv
+
+# Cache management
+faith cache size              # show DB + cache sizes
+faith cache clear --confirm   # delete ~/.faith/cache/
+faith cache path              # print ~/.faith location
 
 # Inventory
 faith list translations
 faith list books --tr ONBV
+
+# Shell completions
+faith completions bash > /usr/local/etc/bash_completion.d/faith
+faith completions zsh > ~/.zsh/_faith
 
 # Capability manifest (what an agent should call before anything else)
 faith manifest

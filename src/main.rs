@@ -91,6 +91,10 @@ enum Cmd {
     Completions {
         shell: String,
     },
+    Cache {
+        #[command(subcommand)]
+        subcommand: CacheKind,
+    },
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -112,6 +116,19 @@ enum ListKind {
         #[arg(long)]
         tr: String,
     },
+}
+
+#[derive(Debug, Subcommand)]
+enum CacheKind {
+    /// Show cache and DB sizes
+    Size,
+    /// Clear cache directory (requires --confirm)
+    Clear {
+        #[arg(long)]
+        confirm: bool,
+    },
+    /// Print cache directory path
+    Path,
 }
 
 fn main() -> ExitCode {
@@ -213,5 +230,14 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
             cli::stats::run(&store, tr.as_deref(), &dir, &mut out)
         }
         Cmd::Completions { shell } => cli::completions::run(&shell, &mut out),
+        Cmd::Cache { subcommand } => {
+            let sub_name = match subcommand {
+                CacheKind::Size => "size",
+                CacheKind::Clear { .. } => "clear",
+                CacheKind::Path => "path",
+            };
+            let confirm = matches!(subcommand, CacheKind::Clear { confirm: true });
+            cli::cache::run(sub_name, confirm, &mut out)
+        }
     }
 }

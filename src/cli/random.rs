@@ -4,9 +4,9 @@ use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::books;
-use crate::cli::resolve_translation;
+use crate::cli::{render_text, resolve_translation, tabular, OutputFormat};
 use crate::error::{FaithError, Result};
-use crate::schema::{BookNames, ErrorOut, VerseOut, SCHEMA_VERSION};
+use crate::schema::{BookNames, ErrorOut, LookupOut, VerseOut, SCHEMA_VERSION};
 use crate::store::Store;
 use crate::translations;
 
@@ -17,18 +17,21 @@ pub enum Scope {
     Nt,
 }
 
+/// Run the `random` subcommand. `seed` overrides the default seed source
+/// (env `FAITH_SEED` or wall-clock nanos) for deterministic output.
 pub fn run<W: Write>(
     store: &Store,
     translation: Option<&str>,
     book: Option<&str>,
     scope: Scope,
     seed: Option<u64>,
+    format: OutputFormat,
     out: &mut W,
 ) -> Result<i32> {
     let alias = translation.unwrap_or("KJV");
     let def = match resolve_translation(alias) {
         Ok(d) => d,
-        Err(e) => return emit_err(out, &e),
+        Err(e) => return emit_err(out, &e, format),
     };
 
     let book_canonical = match book {
@@ -38,7 +41,7 @@ pub fn run<W: Write>(
                 let e = FaithError::RefParse {
                     input: b.to_string(),
                 };
-                return emit_err(out, &e);
+                return emit_err(out, &e, format);
             }
         },
         None => None,
@@ -72,9 +75,9 @@ pub fn run<W: Write>(
             let e = FaithError::NotFound {
                 reference: format!("{}/<random>", def.alias),
             };
-            return emit_err(out, &e);
+            return emit_err(out, &e, format);
         }
-        Err(e) => return emit_err(out, &e),
+        Err(e) => return emit_err(out, &e, format),
     };
 
     let (book_id, chapter, verse, text) = picked;
@@ -97,15 +100,34 @@ pub fn run<W: Write>(
         dir: def.direction.to_string(),
     };
 
-    serde_json::to_writer(&mut *out, &v)?;
-    writeln!(out)?;
+    match format {
+        OutputFormat::Tsv | OutputFormat::Csv => {
+            let csv = matches!(format, OutputFormat::Csv);
+            tabular::write_verse_header(out, csv)?;
+            tabular::write_lookup_rows(out, std::slice::from_ref(&LookupOut::Verse(v)), csv)?;
+        }
+        OutputFormat::Text => {
+            writeln!(out, "{}", render_text(&LookupOut::Verse(v)))?;
+        }
+        OutputFormat::Json => {
+            serde_json::to_writer(&mut *out, &v)?;
+            writeln!(out)?;
+        }
+    }
     Ok(0)
 }
 
-fn emit_err<W: Write>(out: &mut W, e: &FaithError) -> Result<i32> {
+fn emit_err<W: Write>(out: &mut W, e: &FaithError, format: OutputFormat) -> Result<i32> {
     let eo = ErrorOut::from_err(e);
-    serde_json::to_writer(&mut *out, &eo)?;
-    writeln!(out)?;
+    match format {
+        OutputFormat::Text => {
+            writeln!(out, "{}", render_text(&LookupOut::Error(eo)))?;
+        }
+        _ => {
+            serde_json::to_writer(&mut *out, &eo)?;
+            writeln!(out)?;
+        }
+    }
     Ok(e.exit_code_int())
 }
 

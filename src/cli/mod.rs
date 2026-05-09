@@ -11,6 +11,20 @@ use crate::translations::{self, TranslationDef};
 
 pub const MAX_RANGE_VERSES: usize = 500;
 
+/// Output format selector across user-facing subcommands.
+///
+/// `Json` is the default for agents (stable `faith.v1` schema).
+/// `Text` is human-friendly. `Tsv`/`Csv` emit tabular rows for spreadsheet
+/// pipelines. Subcommands that cannot meaningfully produce a table return
+/// `E_FORMAT_UNSUPPORTED` (exit 2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OutputFormat {
+    Json,
+    Text,
+    Tsv,
+    Csv,
+}
+
 pub mod batch;
 pub mod completions;
 pub mod diff;
@@ -21,6 +35,7 @@ pub mod list;
 pub mod manifest;
 pub mod random;
 pub mod stats;
+pub mod tabular;
 
 pub fn resolve_translation(alias: &str) -> Result<&'static TranslationDef> {
     translations::by_alias(alias).ok_or_else(|| FaithError::TranslationMissing {

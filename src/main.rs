@@ -4,6 +4,7 @@ use std::process::ExitCode;
 use clap::{Parser, Subcommand, ValueEnum};
 
 use faith::cli;
+use faith::cli::OutputFormat;
 use faith::error::FaithError;
 use faith::store::{self, Store};
 
@@ -18,6 +19,19 @@ struct Cli {
 enum Format {
     Json,
     Text,
+    Tsv,
+    Csv,
+}
+
+impl From<Format> for OutputFormat {
+    fn from(f: Format) -> Self {
+        match f {
+            Format::Json => OutputFormat::Json,
+            Format::Text => OutputFormat::Text,
+            Format::Tsv => OutputFormat::Tsv,
+            Format::Csv => OutputFormat::Csv,
+        }
+    }
 }
 
 #[derive(Debug, Subcommand)]
@@ -38,6 +52,8 @@ enum Cmd {
     List {
         #[command(subcommand)]
         what: ListKind,
+        #[arg(long, value_enum, default_value_t = Format::Json, global = true)]
+        format: Format,
     },
     Install {
         #[arg(required = true)]
@@ -58,11 +74,15 @@ enum Cmd {
         scope: ScopeArg,
         #[arg(long)]
         seed: Option<u64>,
+        #[arg(long, value_enum, default_value_t = Format::Json)]
+        format: Format,
     },
     Diff {
         reference: String,
         #[arg(long, value_delimiter = ',', required = true)]
         tr: Vec<String>,
+        #[arg(long, value_enum, default_value_t = Format::Json)]
+        format: Format,
     },
     Stats {
         #[arg(long)]
@@ -121,33 +141,27 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
             format,
         } => {
             let store = Store::open(&path)?;
-            cli::get::run(
-                &store,
-                &reference,
-                &tr,
-                matches!(format, Format::Text),
-                &mut out,
-            )
+            cli::get::run(&store, &reference, &tr, format.into(), &mut out)
         }
         Cmd::Batch { tr, format } => {
             let store = Store::open(&path)?;
             let stdin = io::stdin();
             let mut lock = stdin.lock();
-            cli::batch::run(
-                &store,
-                &tr,
-                matches!(format, Format::Text),
-                &mut lock,
-                &mut out,
-            )
+            cli::batch::run(&store, &tr, format.into(), &mut lock, &mut out)
         }
-        Cmd::List { what } => {
+        Cmd::List { what, format } => {
             let store = Store::open(&path)?;
             match what {
-                ListKind::Translations { lang, installed } => {
-                    cli::list::run_translations(&store, lang.as_deref(), installed, &mut out)
+                ListKind::Translations { lang, installed } => cli::list::run_translations(
+                    &store,
+                    lang.as_deref(),
+                    installed,
+                    format.into(),
+                    &mut out,
+                ),
+                ListKind::Books { tr } => {
+                    cli::list::run_books(&store, &tr, format.into(), &mut out)
                 }
-                ListKind::Books { tr } => cli::list::run_books(&store, &tr, &mut out),
             }
         }
         Cmd::Install { translations } => {
@@ -167,6 +181,7 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
             book,
             scope,
             seed,
+            format,
         } => {
             let store = Store::open(&path)?;
             let s = match scope {
@@ -174,11 +189,23 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
                 ScopeArg::Ot => cli::random::Scope::Ot,
                 ScopeArg::Nt => cli::random::Scope::Nt,
             };
-            cli::random::run(&store, tr.as_deref(), book.as_deref(), s, seed, &mut out)
+            cli::random::run(
+                &store,
+                tr.as_deref(),
+                book.as_deref(),
+                s,
+                seed,
+                format.into(),
+                &mut out,
+            )
         }
-        Cmd::Diff { reference, tr } => {
+        Cmd::Diff {
+            reference,
+            tr,
+            format,
+        } => {
             let store = Store::open(&path)?;
-            cli::diff::run(&store, &reference, &tr, &mut out)
+            cli::diff::run(&store, &reference, &tr, format.into(), &mut out)
         }
         Cmd::Stats { tr } => {
             let store = Store::open(&path)?;

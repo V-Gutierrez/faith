@@ -1,6 +1,7 @@
 use std::io::Cursor;
 
 use faith::cli;
+use faith::cli::OutputFormat;
 use faith::store::{Store, StoredTranslation};
 use tempfile::TempDir;
 
@@ -64,9 +65,18 @@ fn fresh_store() -> (Store, TempDir) {
 }
 
 fn run_get(store: &Store, reference: &str, trs: &[&str], text: bool) -> (i32, String) {
+    let fmt = if text {
+        OutputFormat::Text
+    } else {
+        OutputFormat::Json
+    };
+    run_get_fmt(store, reference, trs, fmt)
+}
+
+fn run_get_fmt(store: &Store, reference: &str, trs: &[&str], fmt: OutputFormat) -> (i32, String) {
     let mut buf = Cursor::new(Vec::<u8>::new());
     let trs_owned: Vec<String> = trs.iter().map(|s| s.to_string()).collect();
-    let code = cli::get::run(store, reference, &trs_owned, text, &mut buf).unwrap();
+    let code = cli::get::run(store, reference, &trs_owned, fmt, &mut buf).unwrap();
     (code, String::from_utf8(buf.into_inner()).unwrap())
 }
 
@@ -140,7 +150,7 @@ fn batch_preserves_order_snapshot() {
     let mut stdin =
         Cursor::new(br#"["John 3:16","Psalms 23:1","Romans 8:28","Florbal 1:1"]"#.to_vec());
     let mut buf = Cursor::new(Vec::<u8>::new());
-    let code = cli::batch::run(&s, "KJV", false, &mut stdin, &mut buf).unwrap();
+    let code = cli::batch::run(&s, "KJV", OutputFormat::Json, &mut stdin, &mut buf).unwrap();
     assert_eq!(code, 2);
     insta::assert_snapshot!(String::from_utf8(buf.into_inner()).unwrap());
 }
@@ -149,7 +159,7 @@ fn batch_preserves_order_snapshot() {
 fn list_translations_snapshot() {
     let (s, _d) = fresh_store();
     let mut buf = Cursor::new(Vec::<u8>::new());
-    cli::list::run_translations(&s, None, false, &mut buf).unwrap();
+    cli::list::run_translations(&s, None, false, OutputFormat::Json, &mut buf).unwrap();
     let out = String::from_utf8(buf.into_inner()).unwrap();
     let normalized = out.replace(
         "\"installed_at\":\"2026-05-09T00:00:00Z\"",
@@ -162,7 +172,7 @@ fn list_translations_snapshot() {
 fn list_books_snapshot() {
     let (s, _d) = fresh_store();
     let mut buf = Cursor::new(Vec::<u8>::new());
-    cli::list::run_books(&s, "KJV", &mut buf).unwrap();
+    cli::list::run_books(&s, "KJV", OutputFormat::Json, &mut buf).unwrap();
     insta::assert_snapshot!(String::from_utf8(buf.into_inner()).unwrap());
 }
 
@@ -214,6 +224,7 @@ fn random_deterministic_with_seed_snapshot() {
         None,
         cli::random::Scope::All,
         Some(42),
+        OutputFormat::Json,
         &mut buf,
     )
     .unwrap();
@@ -232,6 +243,7 @@ fn random_same_seed_same_output() {
         None,
         cli::random::Scope::All,
         Some(7),
+        OutputFormat::Json,
         &mut a,
     )
     .unwrap();
@@ -241,6 +253,7 @@ fn random_same_seed_same_output() {
         None,
         cli::random::Scope::All,
         Some(7),
+        OutputFormat::Json,
         &mut b,
     )
     .unwrap();
@@ -258,6 +271,7 @@ fn random_book_scoped_returns_only_that_book() {
             Some("PSA"),
             cli::random::Scope::All,
             Some(seed),
+            OutputFormat::Json,
             &mut buf,
         )
         .unwrap();
@@ -277,6 +291,7 @@ fn random_nt_scope_excludes_ot_books() {
             None,
             cli::random::Scope::Nt,
             Some(seed),
+            OutputFormat::Json,
             &mut buf,
         )
         .unwrap();
@@ -295,6 +310,7 @@ fn random_unknown_translation_errors() {
         None,
         cli::random::Scope::All,
         Some(1),
+        OutputFormat::Json,
         &mut buf,
     )
     .unwrap();
@@ -338,7 +354,7 @@ fn diff_requires_at_least_two_translations() {
     let (s, _d) = fresh_store();
     let mut buf = Cursor::new(Vec::<u8>::new());
     let trs: Vec<String> = vec!["KJV".into()];
-    let code = cli::diff::run(&s, "John 3:16", &trs, &mut buf).unwrap();
+    let code = cli::diff::run(&s, "John 3:16", &trs, OutputFormat::Json, &mut buf).unwrap();
     assert_eq!(code, 2);
     let out = String::from_utf8(buf.into_inner()).unwrap();
     assert!(
@@ -459,4 +475,126 @@ fn manifest_snapshot() {
 fn normalize_data_dir(s: &str) -> String {
     let re = regex::Regex::new(r#""data_dir":"[^"]*""#).unwrap();
     re.replace_all(s, "\"data_dir\":\"<PATH>\"").into_owned()
+}
+
+#[test]
+fn get_tsv_single_verse_emits_header_and_row() {
+    let (s, _d) = fresh_store();
+    let (code, out) = run_get_fmt(&s, "John 3:16", &["KJV"], OutputFormat::Tsv);
+    assert_eq!(code, 0);
+    let lines: Vec<&str> = out.lines().collect();
+    assert_eq!(lines[0], "translation\tbook\tchapter\tverse\ttext");
+    assert!(
+        lines[1].starts_with("KJV\tJHN\t3\t16\t"),
+        "row: {}",
+        lines[1]
+    );
+    assert_eq!(lines.len(), 2);
+}
+
+#[test]
+fn get_csv_quotes_text_with_commas() {
+    let (s, _d) = fresh_store();
+    let (code, out) = run_get_fmt(&s, "John 3:16", &["KJV"], OutputFormat::Csv);
+    assert_eq!(code, 0);
+    let lines: Vec<&str> = out.lines().collect();
+    assert_eq!(lines[0], "translation,book,chapter,verse,text");
+    assert!(lines[1].starts_with("KJV,JHN,3,16,\""), "row: {}", lines[1]);
+    assert!(lines[1].ends_with('"'), "row: {}", lines[1]);
+}
+
+#[test]
+fn get_tsv_range_emits_one_row_per_verse() {
+    let (s, _d) = fresh_store();
+    let (code, out) = run_get_fmt(&s, "John 3:16-18", &["KJV"], OutputFormat::Tsv);
+    assert_eq!(code, 0);
+    let rows: Vec<&str> = out.lines().skip(1).collect();
+    assert_eq!(rows.len(), 3);
+    assert!(rows[0].contains("\t16\t"));
+    assert!(rows[2].contains("\t18\t"));
+}
+
+#[test]
+fn get_csv_multi_translation_each_row_has_translation_id() {
+    let (s, _d) = fresh_store();
+    let (code, out) = run_get_fmt(&s, "John 3:16", &["KJV", "ONBV"], OutputFormat::Csv);
+    assert_eq!(code, 0);
+    let rows: Vec<&str> = out.lines().skip(1).collect();
+    assert_eq!(rows.len(), 2);
+    assert!(rows[0].starts_with("KJV,"));
+    assert!(rows[1].starts_with("ONBV,"));
+}
+
+#[test]
+fn batch_tsv_emits_header_and_rows() {
+    let (s, _d) = fresh_store();
+    let mut stdin = Cursor::new(br#"["John 3:16","Psalms 23:1"]"#.to_vec());
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::batch::run(&s, "KJV", OutputFormat::Tsv, &mut stdin, &mut buf).unwrap();
+    assert_eq!(code, 0);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    let lines: Vec<&str> = out.lines().collect();
+    assert_eq!(lines[0], "translation\tbook\tchapter\tverse\ttext");
+    assert_eq!(lines.len(), 3);
+}
+
+#[test]
+fn list_translations_csv_emits_id_first() {
+    let (s, _d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    cli::list::run_translations(&s, None, true, OutputFormat::Csv, &mut buf).unwrap();
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    let lines: Vec<&str> = out.lines().collect();
+    assert_eq!(lines[0], "id,name,language,direction,verses");
+    assert!(lines.iter().any(|l| l.starts_with("KJV,")));
+    assert!(lines.iter().any(|l| l.starts_with("ONBV,")));
+}
+
+#[test]
+fn list_books_tsv_emits_usfm_only() {
+    let (s, _d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    cli::list::run_books(&s, "KJV", OutputFormat::Tsv, &mut buf).unwrap();
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    let lines: Vec<&str> = out.lines().collect();
+    assert_eq!(lines[0], "usfm");
+    assert!(lines.contains(&"JHN"));
+    assert!(lines.contains(&"PSA"));
+    assert!(lines.contains(&"ROM"));
+}
+
+#[test]
+fn random_tsv_emits_single_row() {
+    let (s, _d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::random::run(
+        &s,
+        Some("KJV"),
+        None,
+        cli::random::Scope::All,
+        Some(42),
+        OutputFormat::Tsv,
+        &mut buf,
+    )
+    .unwrap();
+    assert_eq!(code, 0);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    let lines: Vec<&str> = out.lines().collect();
+    assert_eq!(lines[0], "translation\tbook\tchapter\tverse\ttext");
+    assert_eq!(lines.len(), 2);
+    assert!(lines[1].starts_with("KJV\t"));
+}
+
+#[test]
+fn diff_csv_one_row_per_translation() {
+    let (s, _d) = fresh_store();
+    let trs: Vec<String> = vec!["KJV".into(), "ONBV".into()];
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::diff::run(&s, "John 3:16", &trs, OutputFormat::Csv, &mut buf).unwrap();
+    assert_eq!(code, 0);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    let rows: Vec<&str> = out.lines().skip(1).collect();
+    assert_eq!(rows.len(), 2);
+    assert!(rows[0].starts_with("KJV,"));
+    assert!(rows[1].starts_with("ONBV,"));
 }

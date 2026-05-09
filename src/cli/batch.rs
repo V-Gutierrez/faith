@@ -1,15 +1,17 @@
 use std::io::{Read, Write};
 
-use crate::cli::{lookup, render_text, resolve_translation};
+use crate::cli::{lookup, render_text, resolve_translation, tabular, OutputFormat};
 use crate::error::Result;
 use crate::reference;
 use crate::schema::{ErrorOut, LookupOut};
 use crate::store::Store;
 
+/// Run the `batch` subcommand: read a JSON array of references from `stdin`,
+/// resolve each against `translation`, and emit results in `format`.
 pub fn run<R: Read, W: Write>(
     store: &Store,
     translation: &str,
-    format_text: bool,
+    format: OutputFormat,
     stdin: &mut R,
     out: &mut W,
 ) -> Result<i32> {
@@ -39,16 +41,24 @@ pub fn run<R: Read, W: Write>(
         }
     }
 
-    if format_text {
-        for (i, r) in results.iter().enumerate() {
-            if i > 0 {
-                writeln!(out)?;
-            }
-            writeln!(out, "{}", render_text(r))?;
+    match format {
+        OutputFormat::Tsv | OutputFormat::Csv => {
+            let csv = matches!(format, OutputFormat::Csv);
+            tabular::write_verse_header(out, csv)?;
+            tabular::write_lookup_rows(out, &results, csv)?;
         }
-    } else {
-        serde_json::to_writer(&mut *out, &results)?;
-        writeln!(out)?;
+        OutputFormat::Text => {
+            for (i, r) in results.iter().enumerate() {
+                if i > 0 {
+                    writeln!(out)?;
+                }
+                writeln!(out, "{}", render_text(r))?;
+            }
+        }
+        OutputFormat::Json => {
+            serde_json::to_writer(&mut *out, &results)?;
+            writeln!(out)?;
+        }
     }
     Ok(worst)
 }

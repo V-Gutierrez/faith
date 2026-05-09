@@ -1,23 +1,28 @@
 use std::io::Write;
 
-use crate::cli::{lookup, render_text, resolve_translation};
+use crate::cli::{lookup, render_text, resolve_translation, tabular, OutputFormat};
 use crate::error::Result;
 use crate::reference;
 use crate::schema::LookupOut;
 use crate::store::Store;
 
+/// Run the `get` subcommand against `store` for the given reference and
+/// translation aliases, writing rendered output to `out` in `format`.
+///
+/// Errors per-translation are reported inline; the returned exit code is the
+/// worst error encountered (0 on success).
 pub fn run<W: Write>(
     store: &Store,
     reference_input: &str,
     translations: &[String],
-    format_text: bool,
+    format: OutputFormat,
     out: &mut W,
 ) -> Result<i32> {
     let parsed = match reference::parse(reference_input) {
         Ok(p) => p,
         Err(e) => {
             let err = crate::schema::ErrorOut::from_err(&e);
-            emit_single(out, &LookupOut::Error(err), format_text)?;
+            emit_single(out, &LookupOut::Error(err), format)?;
             return Ok(e.exit_code_int());
         }
     };
@@ -50,28 +55,51 @@ pub fn run<W: Write>(
         }
     }
 
-    if results.len() == 1 {
-        emit_single(out, &results[0], format_text)?;
-    } else if format_text {
-        for (i, r) in results.iter().enumerate() {
-            if i > 0 {
+    match format {
+        OutputFormat::Tsv | OutputFormat::Csv => {
+            let csv = matches!(format, OutputFormat::Csv);
+            tabular::write_verse_header(out, csv)?;
+            tabular::write_lookup_rows(out, &results, csv)?;
+        }
+        OutputFormat::Text => {
+            if results.len() == 1 {
+                writeln!(out, "{}", render_text(&results[0]))?;
+            } else {
+                for (i, r) in results.iter().enumerate() {
+                    if i > 0 {
+                        writeln!(out)?;
+                    }
+                    writeln!(out, "{}", render_text(r))?;
+                }
+            }
+        }
+        OutputFormat::Json => {
+            if results.len() == 1 {
+                serde_json::to_writer(&mut *out, &results[0])?;
+                writeln!(out)?;
+            } else {
+                serde_json::to_writer(&mut *out, &results)?;
                 writeln!(out)?;
             }
-            writeln!(out, "{}", render_text(r))?;
         }
-    } else {
-        serde_json::to_writer(&mut *out, &results)?;
-        writeln!(out)?;
     }
     Ok(worst_exit)
 }
 
-fn emit_single<W: Write>(out: &mut W, r: &LookupOut, format_text: bool) -> Result<()> {
-    if format_text {
-        writeln!(out, "{}", render_text(r))?;
-    } else {
-        serde_json::to_writer(&mut *out, r)?;
-        writeln!(out)?;
+fn emit_single<W: Write>(out: &mut W, r: &LookupOut, format: OutputFormat) -> Result<()> {
+    match format {
+        OutputFormat::Text => {
+            writeln!(out, "{}", render_text(r))?;
+        }
+        OutputFormat::Tsv | OutputFormat::Csv => {
+            let csv = matches!(format, OutputFormat::Csv);
+            tabular::write_verse_header(out, csv)?;
+            tabular::write_lookup_rows(out, std::slice::from_ref(r), csv)?;
+        }
+        OutputFormat::Json => {
+            serde_json::to_writer(&mut *out, r)?;
+            writeln!(out)?;
+        }
     }
     Ok(())
 }

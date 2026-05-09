@@ -1,6 +1,6 @@
 [package]
 name = "faith"
-version = "0.1.1-alpha.0"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.83"
 authors = ["Victor Gutierrez <victorgutierrezgomes@gmail.com>"]
@@ -22,7 +22,6 @@ name = "faith"
 path = "src/lib.rs"
 
 [dependencies]
-anyhow = "1"
 clap = { version = "4", features = ["derive", "cargo"] }
 clap_complete = "4"
 rusqlite = { version = "0.32", features = ["bundled", "blob"] }

@@ -34,7 +34,7 @@ pub fn run<W: Write>(
 ) -> Result<i32> {
     let alias = match (translation, lang) {
         (Some(t), _) => t.to_string(),
-        (None, Some(l)) => match resolve_by_lang(l) {
+        (None, Some(l)) => match super::resolve_by_lang(l) {
             Some(a) => a.to_string(),
             None => {
                 let e = FaithError::TranslationMissing {
@@ -159,26 +159,3 @@ fn default_seed() -> u64 {
         .unwrap_or(0xCAFE_BABE_DEAD_BEEF)
 }
 
-/// Resolve a language code (ISO 639-2 like `pt` or ISO 639-3 like `por`)
-/// to the first matching translation alias in the catalog.
-fn resolve_by_lang(lang: &str) -> Option<&'static str> {
-    let lower = lang.to_ascii_lowercase();
-    // Try direct match on iso3 (catalog stores iso3: "eng", "por")
-    if let Some(t) = translations::CATALOG.iter().find(|t| t.language == lower) {
-        return Some(t.alias);
-    }
-    // Try iso2 → iso3 conversion then match
-    let iso3 = match lower.as_str() {
-        "en" => "eng",
-        "pt" => "por",
-        "es" => "spa",
-        "fr" => "fra",
-        "de" => "deu",
-        "he" => "heb",
-        _ => return None,
-    };
-    translations::CATALOG
-        .iter()
-        .find(|t| t.language == iso3)
-        .map(|t| t.alias)
-}

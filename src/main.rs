@@ -40,6 +40,8 @@ enum Cmd {
         reference: String,
         #[arg(long, value_delimiter = ',')]
         tr: Vec<String>,
+        #[arg(long)]
+        lang: Option<String>,
         #[arg(long, value_enum, default_value_t = Format::Json)]
         format: Format,
     },
@@ -83,6 +85,8 @@ enum Cmd {
         reference: String,
         #[arg(long, value_delimiter = ',', required = true)]
         tr: Vec<String>,
+        #[arg(long)]
+        lang: Option<String>,
         #[arg(long, value_enum, default_value_t = Format::Json)]
         format: Format,
     },
@@ -96,6 +100,17 @@ enum Cmd {
     Cache {
         #[command(subcommand)]
         subcommand: CacheKind,
+    },
+    Search {
+        query: String,
+        #[arg(long)]
+        tr: Option<String>,
+        #[arg(long)]
+        lang: Option<String>,
+        #[arg(long)]
+        limit: Option<u32>,
+        #[arg(long, value_enum, default_value_t = Format::Json)]
+        format: Format,
     },
 }
 
@@ -157,10 +172,12 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
         Cmd::Get {
             reference,
             tr,
+            lang,
             format,
         } => {
             let store = Store::open(&path)?;
-            cli::get::run(&store, &reference, &tr, format.into(), &mut out)
+            let trs = resolve_lang_or_tr(&tr, lang.as_deref());
+            cli::get::run(&store, &reference, &trs, format.into(), &mut out)
         }
         Cmd::Batch { tr, format } => {
             let store = Store::open(&path)?;
@@ -223,10 +240,12 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
         Cmd::Diff {
             reference,
             tr,
+            lang,
             format,
         } => {
             let store = Store::open(&path)?;
-            cli::diff::run(&store, &reference, &tr, format.into(), &mut out)
+            let trs = resolve_lang_or_tr(&tr, lang.as_deref());
+            cli::diff::run(&store, &reference, &trs, format.into(), &mut out)
         }
         Cmd::Stats { tr } => {
             let store = Store::open(&path)?;
@@ -243,5 +262,34 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
             let confirm = matches!(subcommand, CacheKind::Clear { confirm: true });
             cli::cache::run(sub_name, confirm, &mut out)
         }
+        Cmd::Search {
+            query,
+            tr,
+            lang,
+            limit,
+            format,
+        } => {
+            let store = Store::open(&path)?;
+            let resolved_tr = match (&tr, &lang) {
+                (Some(t), _) => Some(t.as_str()),
+                (None, Some(l)) => cli::resolve_by_lang(l).or(None),
+                _ => None,
+            };
+            cli::search::run(&store, &query, resolved_tr, limit, format.into(), &mut out)
+        }
     }
+}
+
+/// When `--tr` is empty but `--lang` is set, resolve to a single-element vec.
+/// Falls through to original tr list otherwise.
+fn resolve_lang_or_tr(tr: &[String], lang: Option<&str>) -> Vec<String> {
+    if !tr.is_empty() {
+        return tr.to_vec();
+    }
+    if let Some(l) = lang {
+        if let Some(alias) = cli::resolve_by_lang(l) {
+            return vec![alias.to_string()];
+        }
+    }
+    tr.to_vec()
 }

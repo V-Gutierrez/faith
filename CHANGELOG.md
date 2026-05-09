@@ -5,15 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.1-alpha.0] - 2026-05-09
+## [0.2.0] - 2026-05-09
 
 ### Added
 
+- **`faith search <query> [--tr ID] [--lang CODE] [--limit N]`** — FTS5 full-text search with BM25 ranking and snippet highlighting (`»…«`).
+- **Global `--lang` resolution** — `get`, `diff`, `random`, and `search` now support `--lang pt` (or `en`, `es`, etc) as an alternative to `--tr`. Resolves to the first available translation for that language.
+- **4 new Portuguese translations** added to the catalog (HelloAO):
+  - `BLJ` (Bíblia Livre - 66 books, CC BY-SA 4.0)
+  - `BSL` (Bíblia Portuguesa Mundial - 66 books)
+  - `BLT` (Biblia Livre Para Todos - NT only)
+  - `TFT` (Tradução para Tradutores - NT only)
 - **`faith info <book> [--tr ID]`** — book metadata (USFM, name, aliases, chapters, verses_total, testament, order)
-- **`faith random [--tr ID] [--book USFM] [--scope verse|chapter|ot|nt] [--seed N]`** — deterministic random verse/chapter with FAITH_SEED env support
-- **Multi-chapter range parser** — `faith get "john 3:16-4:2"` now parses and fetches cross-chapter ranges; max 500 verses per range (E_RANGE_TOO_LARGE exit 2)
-- **`faith diff <ref> --tr ID1,ID2[,ID3...]`** — side-by-side translation comparison; min 2 translations
-- **`faith stats [--tr ID]`** — global or per-translation observability (books, chapters, verses, OT/NT split, mtime)
+- **`faith random [--tr ID] [--lang CODE] [--book USFM] [--scope all|ot|nt] [--seed N]`** — deterministic random verse/chapter with FAITH_SEED env support
+- **`faith stats [--tr ID]`** — global or per-translation observability (books, chapters, verses, OT/NT split, installed_at)
 - **`faith completions <shell>`** — shell completion scripts (bash/zsh/fish/powershell/elvish)
 - **Tabular output formats** — `--format tsv|csv` on `get`, `batch`, `random`, `diff`, `list` subcommands
   * RFC 4180 CSV with auto-quoting
@@ -23,17 +28,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * `cache size`: display db/cache/manifest bytes
   * `cache clear --confirm`: idempotent deletion of ~/.faith/cache/
   * `cache path`: print ~/.faith directory
+- **Bilingual `book_name`** — `info` output now includes `book_name: {en, pt}` consistent with verse output
+- **`installed_at` in stats** — `faith stats --tr KJV` now surfaces the installation timestamp
+- **`MessageOut` schema type** — cache clear/path outputs use proper serde serialization (replaces hardcoded JSON)
 
 ### Changed
 
-- Bumped version to `0.1.1-alpha.0` (dev version)
-- README: expanded usage examples to cover all 8 new subcommands
-- SCHEMA.md: documented new output types (BookInfo, RandomOut, Range, Diff, Stats, CacheStats)
+- Bumped version to `0.2.0` (Feature release)
+- **Manifest enrichment**: `faith manifest` now includes `available_translations` (translations in the catalog that are not yet installed) for agent discovery.
+- `schema.rs` Tool Inventory: `get`, `diff`, `search` tools advertise `lang?` flag.
+- **Removed `anyhow` dependency**: reduced unused dependencies (already using `thiserror`).
+- README: expanded usage examples to cover `search` and `--lang` global usage.
+- SCHEMA.md: documented `SearchOut` type.
 
 ### Test Coverage
 
-- 39 integration tests (up from 30 in v0.1.0-alpha.0)
-  * Deterministic seed reproducibility
+- 87 total unit and integration tests (was 73 in v0.1.0)seed reproducibility
   * Range parsing and overflow validation
   * Tabular format escaping (CSV quotes, TSV atomicity)
   * Translation comparison and book scoping

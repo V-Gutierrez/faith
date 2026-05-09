@@ -97,6 +97,8 @@ pub struct Manifest {
     pub version: String,
     pub data_dir: String,
     pub translations: Vec<TranslationInfo>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub available_translations: Vec<AvailableTranslation>,
     pub tools: Vec<ToolInfo>,
 }
 
@@ -118,6 +120,16 @@ pub struct TranslationInfo {
 pub struct ToolInfo {
     pub name: String,
     pub args: Vec<String>,
+}
+
+/// Catalog entry not yet installed — shown in `faith manifest` so agents
+/// know what they *can* install.
+#[derive(Debug, Clone, Serialize)]
+pub struct AvailableTranslation {
+    pub alias: String,
+    pub name: String,
+    pub language: String,
+    pub source_url: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -207,11 +219,34 @@ pub struct MessageOut {
     pub message: String,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct SearchOut {
+    pub schema: &'static str,
+    pub kind: &'static str,
+    pub query: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub translation: Option<String>,
+    pub matches: Vec<SearchMatch>,
+    pub total: usize,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SearchMatch {
+    #[serde(rename = "ref")]
+    pub reference: String,
+    pub translation: String,
+    pub book: String,
+    pub chapter: u16,
+    pub verse: u16,
+    pub snippet: String,
+    pub rank: f64,
+}
+
 pub fn tool_inventory_v1() -> Vec<ToolInfo> {
     vec![
         ToolInfo {
             name: "get".into(),
-            args: vec!["ref".into(), "tr?".into()],
+            args: vec!["ref".into(), "tr?".into(), "lang?".into()],
         },
         ToolInfo {
             name: "batch".into(),
@@ -235,15 +270,19 @@ pub fn tool_inventory_v1() -> Vec<ToolInfo> {
         },
         ToolInfo {
             name: "random".into(),
-            args: vec!["tr?".into(), "book?".into(), "scope?".into()],
+            args: vec!["tr?".into(), "lang?".into(), "book?".into(), "scope?".into()],
         },
         ToolInfo {
             name: "diff".into(),
-            args: vec!["ref".into(), "tr+".into()],
+            args: vec!["ref".into(), "tr+".into(), "lang?".into()],
         },
         ToolInfo {
             name: "stats".into(),
             args: vec!["tr?".into()],
+        },
+        ToolInfo {
+            name: "search".into(),
+            args: vec!["query".into(), "tr?".into(), "lang?".into(), "limit?".into()],
         },
         ToolInfo {
             name: "completions".into(),

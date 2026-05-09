@@ -1,11 +1,14 @@
 use std::io::Write;
 
 use crate::error::Result;
-use crate::schema::{Manifest, TranslationInfo, SCHEMA_VERSION};
+use crate::schema::{AvailableTranslation, Manifest, TranslationInfo, SCHEMA_VERSION};
 use crate::store::{self, Store};
+use crate::translations;
 
 pub fn run<W: Write>(store: &Store, out: &mut W) -> Result<i32> {
     let installed = store.list_translations()?;
+    let installed_ids: Vec<String> = installed.iter().map(|t| t.id.clone()).collect();
+
     let translations: Vec<TranslationInfo> = installed
         .into_iter()
         .map(|t| TranslationInfo {
@@ -22,11 +25,23 @@ pub fn run<W: Write>(store: &Store, out: &mut W) -> Result<i32> {
         })
         .collect();
 
+    let available_translations: Vec<AvailableTranslation> = translations::CATALOG
+        .iter()
+        .filter(|t| !installed_ids.iter().any(|id| id == t.alias))
+        .map(|t| AvailableTranslation {
+            alias: t.alias.to_string(),
+            name: t.name.to_string(),
+            language: t.language.to_string(),
+            source_url: t.source_url.to_string(),
+        })
+        .collect();
+
     let manifest = Manifest {
         schema: SCHEMA_VERSION,
         version: env!("CARGO_PKG_VERSION").to_string(),
         data_dir: store::data_dir()?.to_string_lossy().into_owned(),
         translations,
+        available_translations,
         tools: crate::schema::tool_inventory_v1(),
     };
 

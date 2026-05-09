@@ -55,6 +55,7 @@ fn build_app() -> Command {
             Command::new("get")
                 .arg(Arg::new("reference").required(true))
                 .arg(Arg::new("tr").long("tr").value_delimiter(','))
+                .arg(Arg::new("lang").long("lang"))
                 .arg(Arg::new("format").long("format")),
         )
         .subcommand(
@@ -101,9 +102,17 @@ fn build_app() -> Command {
                         .long("tr")
                         .value_delimiter(',')
                         .required(true),
-                ),
+                )
+                .arg(Arg::new("lang").long("lang")),
         )
         .subcommand(Command::new("stats").arg(Arg::new("tr").long("tr")))
+        .subcommand(
+            Command::new("search")
+                .arg(Arg::new("query").required(true))
+                .arg(Arg::new("tr").long("tr"))
+                .arg(Arg::new("lang").long("lang"))
+                .arg(Arg::new("limit").long("limit")),
+        )
         .subcommand(Command::new("completions").arg(Arg::new("shell").required(true)))
         .subcommand(
             Command::new("cache")

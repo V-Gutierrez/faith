@@ -97,13 +97,134 @@ Stable codes:
 | `E_TRANSLATION_MISSING` | requested translation is not installed     | 4    |
 | `E_DATA_MISSING`        | local DB missing or unreadable             | 4    |
 | `E_IO`                  | filesystem / network failure during install | 5    |
+| `E_RANGE_TOO_LARGE`     | range exceeds 500 verse limit              | 2    |
+| `E_FORMAT_UNSUPPORTED`  | output format not supported for command    | 2    |
+
+## Book Info
+
+```json
+{
+  "schema": "faith.v1",
+  "kind": "book_info",
+  "translation": "KJV",
+  "book": {
+    "usfm": "JHN",
+    "name": "John",
+    "book_name": {"en": "John", "pt": "João"},
+    "aliases": ["john", "jhn", "jn", "joh", "jo", "joão", "joao"],
+    "chapters": 21,
+    "verses_total": 879,
+    "testament": "NT",
+    "order": 43
+  }
+}
+```
+
+`translation` and `verses_total` are present only when `--tr` is given.
+
+## Diff
+
+```json
+{
+  "schema": "faith.v1",
+  "kind": "diff",
+  "ref": "John 3:16",
+  "translations": [
+    {"id": "KJV", "text": "For God so loved..."},
+    {"id": "ONBV", "text": "Porque Deus amou..."}
+  ]
+}
+```
+
+For ranges, each entry has `verses: [...]` instead of `text`.
+
+## Stats (global)
+
+```json
+{
+  "schema": "faith.v1",
+  "kind": "stats.global",
+  "translations_installed": 2,
+  "total_verses": 62204,
+  "db_size_bytes": 12345678,
+  "cache_size_bytes": 0,
+  "manifest_last_updated": "2026-05-09T11:00:00Z"
+}
+```
+
+## Stats (per-translation)
+
+```json
+{
+  "schema": "faith.v1",
+  "kind": "stats.translation",
+  "translation": "KJV",
+  "language": "eng",
+  "books": 66,
+  "chapters": 1189,
+  "verses": 31102,
+  "ot_verses": 23145,
+  "nt_verses": 7957,
+  "installed_at": "2026-05-09T11:00:00Z"
+}
+```
+
+## Cache Stats
+
+```json
+{
+  "schema": "faith.v1",
+  "kind": "cache_stats",
+  "db_bytes": 12345678,
+  "cache_bytes": 0,
+  "manifest_bytes": 1234,
+  "data_dir": "/Users/user/.faith"
+}
+```
+
+## Search
+
+```json
+{
+  "schema": "faith.v1",
+  "kind": "search",
+  "query": "loved",
+  "translation": "KJV",
+  "matches": [
+    {
+      "ref": "KJV/JHN/3/16",
+      "translation": "KJV",
+      "book": "JHN",
+      "chapter": 3,
+      "verse": 16,
+      "snippet": "For God so »loved« the world...",
+      "rank": -2.35
+    }
+  ],
+  "total": 1
+}
+```
+
+`translation` is omitted if no filter was passed. `rank` is BM25 relevance (lower is better).
+
+## Message
+
+Generic structured message (used by `cache clear`, `cache path`):
+
+```json
+{
+  "schema": "faith.v1",
+  "kind": "message",
+  "message": "Cleared /Users/.../.faith/cache (freed 10.2MB)"
+}
+```
 
 ## Manifest
 
 ```json
 {
   "schema": "faith.v1",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "data_dir": "/Users/.../.faith",
   "translations": [
     {
@@ -120,11 +241,17 @@ Stable codes:
     }
   ],
   "tools": [
-    {"name": "get",      "args": ["ref", "tr?"]},
-    {"name": "batch",    "args": ["tr?", "stdin: refs[]"]},
-    {"name": "list",     "args": ["kind"]},
-    {"name": "install",  "args": ["tr+"]},
-    {"name": "manifest", "args": []}
+    {"name": "get",         "args": ["ref", "tr?"]},
+    {"name": "batch",       "args": ["tr?", "stdin: refs[]"]},
+    {"name": "list",        "args": ["kind"]},
+    {"name": "install",     "args": ["tr+"]},
+    {"name": "manifest",    "args": []},
+    {"name": "info",        "args": ["book", "tr?"]},
+    {"name": "random",      "args": ["tr?", "lang?", "book?", "scope?"]},
+    {"name": "diff",        "args": ["ref", "tr+"]},
+    {"name": "stats",       "args": ["tr?"]},
+    {"name": "completions", "args": ["shell"]},
+    {"name": "cache",       "args": ["sub"]}
   ]
 }
 ```

@@ -72,6 +72,8 @@ impl Store {
 
             CREATE VIRTUAL TABLE IF NOT EXISTS verses_fts USING fts5(
               text,
+              content='verses',
+              content_rowid='rowid',
               tokenize='unicode61'
             );
             "#,
@@ -112,6 +114,14 @@ impl Store {
         verses: &[(String, u16, u16, String)],
     ) -> Result<()> {
         let tx = self.conn.transaction()?;
+        // Delete old FTS entries for this translation by matching rowids
+        tx.execute_batch(
+            "DELETE FROM verses_fts WHERE rowid IN (
+               SELECT rowid FROM verses WHERE translation = ?1
+             )"
+            .replace("?1", &format!("'{}'", translation.replace('\'', "''")))
+            .as_str(),
+        )?;
         tx.execute(
             "DELETE FROM verses WHERE translation = ?1",
             params![translation],
@@ -120,8 +130,12 @@ impl Store {
             let mut stmt = tx.prepare(
                 "INSERT INTO verses (translation, book, chapter, verse, text) VALUES (?1,?2,?3,?4,?5)",
             )?;
+            let mut fts_stmt = tx.prepare(
+                "INSERT INTO verses_fts (rowid, text) VALUES (last_insert_rowid(), ?1)",
+            )?;
             for (book, chapter, verse, text) in verses {
                 stmt.execute(params![translation, book, chapter, verse, text])?;
+                fts_stmt.execute(params![text])?;
             }
         }
         tx.commit()?;
@@ -387,6 +401,72 @@ impl Store {
         )?;
         Ok(ts)
     }
+
+    /// Full-text search across installed verses using the FTS5 index.
+    ///
+    /// Returns up to `limit` results ranked by BM25, optionally filtered by
+    /// translation. Each result includes the translation, book, chapter, verse,
+    /// matched snippet, and a relevance rank (lower = better match).
+    pub fn search_verses(
+        &self,
+        query: &str,
+        translation: Option<&str>,
+        limit: u32,
+    ) -> Result<Vec<SearchHit>> {
+        let (where_clause, params): (String, Vec<rusqlite::types::Value>) = match translation {
+            Some(tr) => (
+                " AND v.translation = ?2".to_string(),
+                vec![
+                    rusqlite::types::Value::Text(query.to_string()),
+                    rusqlite::types::Value::Text(tr.to_string()),
+                ],
+            ),
+            None => (
+                String::new(),
+                vec![rusqlite::types::Value::Text(query.to_string())],
+            ),
+        };
+
+        let limit_param_idx = params.len() + 1;
+        let sql = format!(
+            "SELECT v.translation, v.book, v.chapter, v.verse,
+                    snippet(verses_fts, 0, '»', '«', '…', 24) AS snippet,
+                    rank
+             FROM verses_fts fts
+             JOIN verses v ON v.rowid = fts.rowid
+             WHERE verses_fts MATCH ?1{where_clause}
+             ORDER BY rank
+             LIMIT ?{limit_param_idx}"
+        );
+
+        let mut all_params = params;
+        all_params.push(rusqlite::types::Value::Integer(limit as i64));
+
+        let mut stmt = self.conn.prepare(&sql)?;
+        let rows = stmt
+            .query_map(rusqlite::params_from_iter(all_params.iter()), |row| {
+                Ok(SearchHit {
+                    translation: row.get(0)?,
+                    book: row.get(1)?,
+                    chapter: row.get(2)?,
+                    verse: row.get(3)?,
+                    snippet: row.get(4)?,
+                    rank: row.get(5)?,
+                })
+            })?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct SearchHit {
+    pub translation: String,
+    pub book: String,
+    pub chapter: u16,
+    pub verse: u16,
+    pub snippet: String,
+    pub rank: f64,
 }
 
 pub fn default_db_path() -> Result<PathBuf> {

@@ -35,6 +35,7 @@ pub mod install;
 pub mod list;
 pub mod manifest;
 pub mod random;
+pub mod search;
 pub mod stats;
 pub mod tabular;
 
@@ -42,6 +43,30 @@ pub fn resolve_translation(alias: &str) -> Result<&'static TranslationDef> {
     translations::by_alias(alias).ok_or_else(|| FaithError::TranslationMissing {
         translation: alias.to_string(),
     })
+}
+
+/// Resolve a language code (ISO 639-2 like `pt` or ISO 639-3 like `por`)
+/// to the first matching translation alias in the catalog.
+pub fn resolve_by_lang(lang: &str) -> Option<&'static str> {
+    let lower = lang.to_ascii_lowercase();
+    // Try direct match on iso3 (catalog stores iso3: "eng", "por")
+    if let Some(t) = translations::CATALOG.iter().find(|t| t.language == lower) {
+        return Some(t.alias);
+    }
+    // Try iso2 → iso3 conversion then match
+    let iso3 = match lower.as_str() {
+        "en" => "eng",
+        "pt" => "por",
+        "es" => "spa",
+        "fr" => "fra",
+        "de" => "deu",
+        "he" => "heb",
+        _ => return None,
+    };
+    translations::CATALOG
+        .iter()
+        .find(|t| t.language == iso3)
+        .map(|t| t.alias)
 }
 
 pub fn info_canonical_book(input: &str) -> Option<String> {

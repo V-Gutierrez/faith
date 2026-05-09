@@ -37,6 +37,46 @@ pub const CATALOG: &[TranslationDef] = &[
         license: "CC BY-SA 4.0",
         source_url: "https://bible.helloao.org/api/por_onbv/complete.json",
     },
+    TranslationDef {
+        alias: "BLJ",
+        helloao_id: "por_blj",
+        name: "Bíblia Livre",
+        english_name: "Portuguese Bíblia Livre",
+        language: "por",
+        direction: "ltr",
+        license: "CC BY-SA 4.0",
+        source_url: "https://bible.helloao.org/api/por_blj/complete.json",
+    },
+    TranslationDef {
+        alias: "BSL",
+        helloao_id: "por_bsl",
+        name: "Bíblia Portuguesa Mundial",
+        english_name: "World Portuguese Bible",
+        language: "por",
+        direction: "ltr",
+        license: "CC BY-SA 4.0",
+        source_url: "https://bible.helloao.org/api/por_bsl/complete.json",
+    },
+    TranslationDef {
+        alias: "BLT",
+        helloao_id: "por_blt",
+        name: "Biblia Livre Para Todos",
+        english_name: "Portuguese Free Bible for All",
+        language: "por",
+        direction: "ltr",
+        license: "CC BY-SA 4.0",
+        source_url: "https://bible.helloao.org/api/por_blt/complete.json",
+    },
+    TranslationDef {
+        alias: "TFT",
+        helloao_id: "por_tft",
+        name: "A Bíblia Sagrada, Tradução para Tradutores",
+        english_name: "Portuguese Translation for Translators",
+        language: "por",
+        direction: "ltr",
+        license: "CC BY-SA 4.0",
+        source_url: "https://bible.helloao.org/api/por_tft/complete.json",
+    },
 ];
 
 pub fn by_alias(alias: &str) -> Option<&'static TranslationDef> {
@@ -66,6 +106,10 @@ mod tests {
         assert!(by_alias("KJV").is_some());
         assert!(by_alias("kjv").is_some());
         assert!(by_alias("ONBV").is_some());
+        assert!(by_alias("BLJ").is_some());
+        assert!(by_alias("BSL").is_some());
+        assert!(by_alias("BLT").is_some());
+        assert!(by_alias("TFT").is_some());
         assert!(by_alias("XYZ").is_none());
     }
 

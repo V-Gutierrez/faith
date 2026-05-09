@@ -605,3 +605,83 @@ fn diff_csv_one_row_per_translation() {
     assert!(rows[0].starts_with("KJV,"));
     assert!(rows[1].starts_with("ONBV,"));
 }
+
+#[test]
+fn search_finds_matching_verses() {
+    let (s, _d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::search::run(&s, "loved", None, Some(5), OutputFormat::Json, &mut buf).unwrap();
+    assert_eq!(code, 0);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["kind"], "search");
+    assert!(v["total"].as_u64().unwrap() >= 1);
+    assert!(v["matches"][0]["snippet"].as_str().unwrap().contains("loved"));
+}
+
+#[test]
+fn search_filter_by_translation() {
+    let (s, _d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code =
+        cli::search::run(&s, "loved", Some("KJV"), Some(5), OutputFormat::Json, &mut buf).unwrap();
+    assert_eq!(code, 0);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["translation"], "KJV");
+    for m in v["matches"].as_array().unwrap() {
+        assert_eq!(m["translation"], "KJV");
+    }
+}
+
+#[test]
+fn search_no_results() {
+    let (s, _d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::search::run(
+        &s,
+        "xyznonexistent",
+        None,
+        Some(5),
+        OutputFormat::Json,
+        &mut buf,
+    )
+    .unwrap();
+    assert_eq!(code, 0);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["total"], 0);
+}
+
+#[test]
+fn search_text_format() {
+    let (s, _d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::search::run(&s, "shepherd", None, Some(5), OutputFormat::Text, &mut buf).unwrap();
+    assert_eq!(code, 0);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    assert!(out.starts_with("Search:"));
+    assert!(out.contains("PSA"));
+}
+
+#[test]
+fn get_with_lang_resolves_translation() {
+    let (s, _d) = fresh_store();
+    let trs: Vec<String> = vec![];
+    // resolve_by_lang("en") -> "KJV" (first eng in catalog)
+    let resolved = if trs.is_empty() {
+        if let Some(alias) = cli::resolve_by_lang("en") {
+            vec![alias.to_string()]
+        } else {
+            trs.clone()
+        }
+    } else {
+        trs.clone()
+    };
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::get::run(&s, "John 3:16", &resolved, OutputFormat::Json, &mut buf).unwrap();
+    assert_eq!(code, 0);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["translation"], "KJV");
+}

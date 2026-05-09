@@ -1,0 +1,5 @@
+---
+source: tests/cli_snapshots.rs
+expression: out
+---
+{"schema":"faith.v1","kind":"diff","ref":"John 3:16","translations":[{"id":"KJV","text":"For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life."},{"id":"ONBV","text":"Porque Deus amou tanto o mundo que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna."}]}

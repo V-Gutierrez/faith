@@ -59,6 +59,11 @@ enum Cmd {
         #[arg(long)]
         seed: Option<u64>,
     },
+    Diff {
+        reference: String,
+        #[arg(long, value_delimiter = ',', required = true)]
+        tr: Vec<String>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -163,6 +168,10 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
                 ScopeArg::Nt => cli::random::Scope::Nt,
             };
             cli::random::run(&store, tr.as_deref(), book.as_deref(), s, seed, &mut out)
+        }
+        Cmd::Diff { reference, tr } => {
+            let store = Store::open(&path)?;
+            cli::diff::run(&store, &reference, &tr, &mut out)
         }
     }
 }

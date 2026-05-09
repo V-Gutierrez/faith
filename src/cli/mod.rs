@@ -9,6 +9,8 @@ use crate::schema::{
 use crate::store::Store;
 use crate::translations::{self, TranslationDef};
 
+pub const MAX_RANGE_VERSES: usize = 500;
+
 pub mod batch;
 pub mod get;
 pub mod info;
@@ -80,6 +82,12 @@ fn do_lookup(store: &Store, parsed: &ParsedRef, def: &TranslationDef) -> Result<
                         "{}/{}/{}/{}-{}",
                         def.alias, parsed.book, parsed.chapter, v, ev
                     ),
+                });
+            }
+            if rows.len() > MAX_RANGE_VERSES {
+                return Err(FaithError::RangeTooLarge {
+                    requested: rows.len() as u32,
+                    max: MAX_RANGE_VERSES as u32,
                 });
             }
             let reference = if ec == parsed.chapter {

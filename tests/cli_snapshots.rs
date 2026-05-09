@@ -305,6 +305,35 @@ fn random_unknown_translation_errors() {
 }
 
 #[test]
+fn get_range_over_500_verses_returns_range_too_large() {
+    let d = tempfile::tempdir().unwrap();
+    let p = d.path().join("bible.db");
+    let mut s = Store::open(&p).unwrap();
+    s.upsert_translation(&StoredTranslation {
+        id: "KJV".into(),
+        name: "King James".into(),
+        english_name: "KJV".into(),
+        language: "eng".into(),
+        direction: "ltr".into(),
+        license: "PD".into(),
+        source_url: "x".into(),
+        installed_at: "2026-05-09T00:00:00Z".into(),
+        books: 0,
+        verses: 0,
+    })
+    .unwrap();
+    let mut verses = Vec::with_capacity(600);
+    for v in 1u16..=600 {
+        verses.push(("PSA".to_string(), 1u16, v, format!("v{v}")));
+    }
+    s.replace_verses("KJV", &verses).unwrap();
+
+    let (code, out) = run_get(&s, "Psalms 1:1-600", &["KJV"], false);
+    assert_eq!(code, 2, "stdout: {out}");
+    assert!(out.contains("E_RANGE_TOO_LARGE"), "stdout: {out}");
+}
+
+#[test]
 fn manifest_snapshot() {
     let (s, _d) = fresh_store();
     let mut buf = Cursor::new(Vec::<u8>::new());

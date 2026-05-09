@@ -78,7 +78,9 @@ fn emit_single<W: Write>(out: &mut W, r: &LookupOut, format_text: bool) -> Resul
 
 fn exit_for_code(c: &crate::error::ErrorCode) -> i32 {
     match c {
-        crate::error::ErrorCode::RefParse => 2,
+        crate::error::ErrorCode::RefParse
+        | crate::error::ErrorCode::RangeTooLarge
+        | crate::error::ErrorCode::FormatUnsupported => 2,
         crate::error::ErrorCode::NotFound => 3,
         crate::error::ErrorCode::TranslationMissing | crate::error::ErrorCode::DataMissing => 4,
         crate::error::ErrorCode::Io => 5,

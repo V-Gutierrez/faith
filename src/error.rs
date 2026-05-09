@@ -23,6 +23,10 @@ pub enum ErrorCode {
     DataMissing,
     #[serde(rename = "E_IO")]
     Io,
+    #[serde(rename = "E_RANGE_TOO_LARGE")]
+    RangeTooLarge,
+    #[serde(rename = "E_FORMAT_UNSUPPORTED")]
+    FormatUnsupported,
 }
 
 impl ErrorCode {
@@ -33,6 +37,8 @@ impl ErrorCode {
             Self::TranslationMissing => "E_TRANSLATION_MISSING",
             Self::DataMissing => "E_DATA_MISSING",
             Self::Io => "E_IO",
+            Self::RangeTooLarge => "E_RANGE_TOO_LARGE",
+            Self::FormatUnsupported => "E_FORMAT_UNSUPPORTED",
         }
     }
 }
@@ -57,6 +63,12 @@ pub enum FaithError {
 
     #[error("I/O failure: {0}")]
     Io(String),
+
+    #[error("range too large: requested {requested} verses, max {max}")]
+    RangeTooLarge { requested: u32, max: u32 },
+
+    #[error("format not supported: {format}")]
+    FormatUnsupported { format: String },
 }
 
 impl FaithError {
@@ -67,6 +79,8 @@ impl FaithError {
             Self::TranslationMissing { .. } => ErrorCode::TranslationMissing,
             Self::DataMissing(_) => ErrorCode::DataMissing,
             Self::Io(_) => ErrorCode::Io,
+            Self::RangeTooLarge { .. } => ErrorCode::RangeTooLarge,
+            Self::FormatUnsupported { .. } => ErrorCode::FormatUnsupported,
         }
     }
 
@@ -76,7 +90,9 @@ impl FaithError {
 
     pub fn exit_code_int(&self) -> i32 {
         match self {
-            Self::RefParse { .. } => 2,
+            Self::RefParse { .. } | Self::RangeTooLarge { .. } | Self::FormatUnsupported { .. } => {
+                2
+            }
             Self::NotFound { .. } => 3,
             Self::TranslationMissing { .. } | Self::DataMissing(_) => 4,
             Self::Io(_) => 5,
@@ -89,6 +105,7 @@ impl FaithError {
             Self::RefParse { input } => Some(input.as_str()),
             Self::NotFound { reference } => Some(reference.as_str()),
             Self::TranslationMissing { translation } => Some(translation.as_str()),
+            Self::FormatUnsupported { format } => Some(format.as_str()),
             _ => None,
         }
     }

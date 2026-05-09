@@ -19,6 +19,7 @@ pub mod install;
 pub mod list;
 pub mod manifest;
 pub mod random;
+pub mod stats;
 
 pub fn resolve_translation(alias: &str) -> Result<&'static TranslationDef> {
     translations::by_alias(alias).ok_or_else(|| FaithError::TranslationMissing {

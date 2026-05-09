@@ -64,6 +64,10 @@ enum Cmd {
         #[arg(long, value_delimiter = ',', required = true)]
         tr: Vec<String>,
     },
+    Stats {
+        #[arg(long)]
+        tr: Option<String>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -172,6 +176,11 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
         Cmd::Diff { reference, tr } => {
             let store = Store::open(&path)?;
             cli::diff::run(&store, &reference, &tr, &mut out)
+        }
+        Cmd::Stats { tr } => {
+            let store = Store::open(&path)?;
+            let dir = store::data_dir()?;
+            cli::stats::run(&store, tr.as_deref(), &dir, &mut out)
         }
     }
 }

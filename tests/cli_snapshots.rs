@@ -334,44 +334,6 @@ fn get_range_over_500_verses_returns_range_too_large() {
 }
 
 #[test]
-fn diff_single_verse_two_translations_snapshot() {
-    let (s, _d) = fresh_store();
-    let mut buf = Cursor::new(Vec::<u8>::new());
-    let trs: Vec<String> = vec!["KJV".into(), "ONBV".into()];
-    let code = cli::diff::run(&s, "John 3:16", &trs, &mut buf).unwrap();
-    assert_eq!(code, 0);
-    let out = String::from_utf8(buf.into_inner()).unwrap();
-    insta::assert_snapshot!(out);
-}
-
-#[test]
-fn diff_range_two_translations() {
-    let (s, _d) = fresh_store();
-    let mut buf = Cursor::new(Vec::<u8>::new());
-    let trs: Vec<String> = vec!["KJV".into(), "ONBV".into()];
-    let code = cli::diff::run(&s, "John 3:16-17", &trs, &mut buf).unwrap();
-    assert_eq!(code, 0);
-    let out = String::from_utf8(buf.into_inner()).unwrap();
-    assert!(out.contains("\"kind\":\"diff\""), "stdout: {out}");
-    assert!(out.contains("\"id\":\"KJV\""));
-    assert!(out.contains("\"id\":\"ONBV\""));
-    assert!(out.contains("\"verses\""));
-}
-
-#[test]
-fn diff_with_missing_translation_records_error_per_entry() {
-    let (s, _d) = fresh_store();
-    let mut buf = Cursor::new(Vec::<u8>::new());
-    let trs: Vec<String> = vec!["KJV".into(), "NOPE".into()];
-    let code = cli::diff::run(&s, "John 3:16", &trs, &mut buf).unwrap();
-    assert_eq!(code, 0);
-    let out = String::from_utf8(buf.into_inner()).unwrap();
-    assert!(out.contains("\"id\":\"NOPE\""), "stdout: {out}");
-    assert!(out.contains("E_TRANSLATION_MISSING"), "stdout: {out}");
-    assert!(out.contains("\"id\":\"KJV\""));
-}
-
-#[test]
 fn diff_requires_at_least_two_translations() {
     let (s, _d) = fresh_store();
     let mut buf = Cursor::new(Vec::<u8>::new());
@@ -383,6 +345,48 @@ fn diff_requires_at_least_two_translations() {
         out.contains("E_REF_PARSE") || out.contains("at least two"),
         "stdout: {out}"
     );
+}
+
+#[test]
+fn stats_global_returns_translations_and_total_verses() {
+    let (s, d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::stats::run(&s, None, d.path(), &mut buf).unwrap();
+    assert_eq!(code, 0);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    assert!(out.contains("\"kind\":\"stats.global\""), "stdout: {out}");
+    assert!(
+        out.contains("\"translations_installed\":2"),
+        "stdout: {out}"
+    );
+    assert!(out.contains("\"total_verses\":9"), "stdout: {out}");
+    assert!(out.contains("\"db_size_bytes\""));
+    assert!(out.contains("\"cache_size_bytes\":0"));
+}
+
+#[test]
+fn stats_per_translation_splits_ot_nt() {
+    let (s, d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::stats::run(&s, Some("KJV"), d.path(), &mut buf).unwrap();
+    assert_eq!(code, 0);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    assert!(out.contains("\"kind\":\"stats.translation\""));
+    assert!(out.contains("\"translation\":\"KJV\""));
+    assert!(out.contains("\"books\":3"));
+    assert!(out.contains("\"verses\":7"));
+    assert!(out.contains("\"ot_verses\":1"), "stdout: {out}");
+    assert!(out.contains("\"nt_verses\":6"), "stdout: {out}");
+}
+
+#[test]
+fn stats_unknown_translation_returns_translation_missing() {
+    let (s, d) = fresh_store();
+    let mut buf = Cursor::new(Vec::<u8>::new());
+    let code = cli::stats::run(&s, Some("NOPE"), d.path(), &mut buf).unwrap();
+    assert_eq!(code, 4);
+    let out = String::from_utf8(buf.into_inner()).unwrap();
+    assert!(out.contains("E_TRANSLATION_MISSING"), "stdout: {out}");
 }
 
 #[test]

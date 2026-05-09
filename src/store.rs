@@ -348,6 +348,34 @@ impl Store {
             .collect::<std::result::Result<Vec<_>, _>>()?;
         Ok(rows)
     }
+
+    /// `(book_id, verse_count)` pairs for an installed translation.
+    ///
+    /// Used by `stats` to derive OT/NT splits without a SQL join into the
+    /// canonical books table (testament data lives in `crate::books`).
+    pub fn translation_book_counts(&self, translation: &str) -> Result<Vec<(String, u32)>> {
+        self.require_translation(translation)?;
+        let mut stmt = self.conn.prepare(
+            "SELECT book, COUNT(*) FROM verses WHERE translation=?1 GROUP BY book ORDER BY book",
+        )?;
+        let rows = stmt
+            .query_map(params![translation], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)? as u32))
+            })?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
+
+    /// Distinct `(book, chapter)` count for an installed translation.
+    pub fn translation_chapter_count(&self, translation: &str) -> Result<u32> {
+        self.require_translation(translation)?;
+        let n: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM (SELECT 1 FROM verses WHERE translation=?1 GROUP BY book, chapter)",
+            params![translation],
+            |row| row.get(0),
+        )?;
+        Ok(n as u32)
+    }
 }
 
 pub fn default_db_path() -> Result<PathBuf> {

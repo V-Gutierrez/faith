@@ -43,7 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Test Coverage
 
-- 87 total unit and integration tests (was 73 in v0.1.0)seed reproducibility
+- 87 total unit and integration tests (was 73 in v0.1.0)
+  * Deterministic seed reproducibility
   * Range parsing and overflow validation
   * Tabular format escaping (CSV quotes, TSV atomicity)
   * Translation comparison and book scoping

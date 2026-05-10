@@ -99,6 +99,9 @@ faith get "João 3:16" --lang pt
 # Parallel diff across multiple translations
 faith diff "John 3:16" --tr KJV,ONBV,BLJ
 
+# Full chapter
+faith get "Eclesiastes 5" --tr ONBV
+
 # Cross-chapter ranges
 faith get "John 3:16-4:2" --tr KJV
 ```
@@ -111,6 +114,23 @@ faith search "shepherd" --lang en --limit 5
 # Search specific translation
 faith search "amor" --tr ONBV --format text
 ```
+
+### Random Verse
+```bash
+faith random --tr ONBV --scope nt
+```
+
+---
+
+## 🖼️ Real Demo
+
+Here's `faith` in action — an AI agent (Consi) searching money and love in milliseconds:
+
+<img src="assets/faith-demo.png" alt="faith CLI demo — search results for 'dinheiro' (ONBV) and 'love' (KJV)" width="600" />
+
+> Search results for **dinheiro** (ONBV) and **love** (KJV) — full-text BM25, ranked, offline.
+
+---
 
 ### Discovery & Utilities
 ```bash

@@ -1,0 +1,32 @@
+name: Update Homebrew Tap
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  homebrew:
+    name: Bump Homebrew formula
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+
+      # We wait a bit to ensure crates.io has fully propagated the crate
+      - name: Wait for crates.io
+        run: sleep 60
+
+      - name: Bump formula in tap
+        uses: mislav/bump-homebrew-formula-action@v3
+        with:
+          formula-name: faith
+          formula-path: Formula/faith.rb
+          homebrew-tap: V-Gutierrez/homebrew-tap
+          download-url: https://static.crates.io/crates/faith/faith-${{ env.VERSION }}.crate
+          commit-message: "faith: update to ${{ env.VERSION }}"
+        env:
+          # You need to create a Personal Access Token (PAT) with 'repo' scope
+          # and add it to your faith repository secrets as TAP_GITHUB_TOKEN
+          COMMITTER_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}

@@ -10,7 +10,7 @@ repository = "https://github.com/V-Gutierrez/faith"
 homepage = "https://github.com/V-Gutierrez/faith"
 documentation = "https://docs.rs/faith"
 readme = "README.md"
-keywords = ["bible", "cli", "agent", "scripture", "mcp"]
+keywords = ["bible", "cli", "agent", "scripture", "mcp", "fts5", "search", "homebrew"]
 categories = ["command-line-utilities", "text-processing"]
 
 [[bin]]

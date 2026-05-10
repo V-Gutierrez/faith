@@ -9,8 +9,11 @@
 [![Crates.io](https://img.shields.io/crates/v/faith.svg?style=flat-square&color=10b981)](https://crates.io/crates/faith)
 [![Downloads](https://img.shields.io/crates/d/faith.svg?style=flat-square&color=10b981)](https://crates.io/crates/faith)
 [![docs.rs](https://img.shields.io/docsrs/faith?style=flat-square&color=10b981)](https://docs.rs/faith)
+[![Build](https://img.shields.io/github/actions/workflow/status/V-Gutierrez/faith/ci.yml?style=flat-square&label=build)](https://github.com/V-Gutierrez/faith/actions)
 [![MSRV](https://img.shields.io/badge/MSRV-1.83-blue?style=flat-square)](https://www.rust-lang.org)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue?style=flat-square)](#license)
+[![GitHub Stars](https://img.shields.io/github/stars/V-Gutierrez/faith?style=flat-square&color=yellow)](https://github.com/V-Gutierrez/faith)
+[![Awesome CLI](https://img.shields.io/badge/awesome--cli-%F0%9F%93%9F-brightgreen?style=flat-square)](https://github.com/alebcay/awesome-cli)
 
 </div>
 
@@ -129,13 +132,22 @@ faith random --lang pt --scope nt
 | --------------------------------- | ---------------------- | ----------------------- |
 | Primary audience                  | **Agents / Scripts**   | Humans (TUI)            |
 | JSON output (default)             | ✅                     | ❌                      |
-| Full-text FTS5 Search             | ✅                     | varies                  |
+| Full-text FTS5 Search (BM25)      | ✅                     | varies                  |
 | Canonical USFM refs (`JHN/3/16`)  | ✅                     | ❌                      |
-| Multi-translation in one call     | ✅                     | ❌                      |
+| Multi-translation parallel diff   | ✅                     | ❌                      |
 | Multi-locale ref parser           | ✅                     | ❌                      |
+| Deterministic via `--seed`        | ✅                     | ❌                      |
 | Cold start                        | **~50 ms** (Rust)      | Slower (Node/Python)    |
+| Cross-chapter ranges              | ✅                     | varies                  |
 
 ---
+
+## 🌍 Ecosystem
+
+- [📦 Crates.io](https://crates.io/crates/faith) — Published Rust crate
+- [📚 Docs.rs](https://docs.rs/faith) — API documentation
+- [🍺 Homebrew Tap](https://github.com/V-Gutierrez/homebrew-tap) — macOS / Linux package
+- [🤖 Agent Skill](https://github.com/V-Gutierrez/faith?tab=readme-ov-file#-for-agents-the-faith-skill) — System prompt for AI agents
 
 ## 📦 Data & Translations
 
@@ -152,5 +164,7 @@ Run `faith manifest` to see the full list of available translations you can inst
 ## 🤝 Contributing
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md). TDD is enforced — write a failing test before writing production code.
+
+**Topics:** `cli` `bible` `ai-tools` `json` `rust` `fts5` `search` `homebrew` `macos` `linux`
 
 License: Dual-licensed under MIT or Apache-2.0. Bible texts retain their original licenses.

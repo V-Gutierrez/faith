@@ -327,20 +327,6 @@ fn dispatch(cli: Cli) -> Result<i32, FaithError> {
     }
 }
 
-/// When `--tr` is empty but `--lang` is set, resolve to a single-element vec.
-/// Falls through to original tr list otherwise.
-fn resolve_lang_or_tr(tr: &[String], lang: Option<&str>) -> Vec<String> {
-    if !tr.is_empty() {
-        return tr.to_vec();
-    }
-    if let Some(l) = lang {
-        if let Some(alias) = cli::resolve_by_lang(l) {
-            return vec![alias.to_string()];
-        }
-    }
-    tr.to_vec()
-}
-
 /// Resolve translation with config support and 7-layer precedence:
 /// 1. CLI --tr flag (highest priority)
 /// 2. CLI --lang flag

@@ -1,6 +1,6 @@
 [package]
 name = "faith"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 rust-version = "1.83"
 authors = ["Victor Gutierrez <victorgutierrezgomes@gmail.com>"]
@@ -33,6 +33,7 @@ ureq = { version = "2", features = ["json"] }
 regex = "1"
 unicode-normalization = "0.1"
 time = { version = "0.3", features = ["formatting", "macros"] }
+toml = "0.8"
 
 [dev-dependencies]
 assert_cmd = "2"

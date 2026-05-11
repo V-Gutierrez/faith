@@ -77,6 +77,56 @@ pub const CATALOG: &[TranslationDef] = &[
         license: "CC BY-SA 4.0",
         source_url: "https://bible.helloao.org/api/por_tft/complete.json",
     },
+    TranslationDef {
+        alias: "RVR09",
+        helloao_id: "spa_r09",
+        name: "Santa Biblia — Reina Valera 1909",
+        english_name: "Spanish Reina Valera 1909",
+        language: "spa",
+        direction: "ltr",
+        license: "Public Domain",
+        source_url: "https://bible.helloao.org/api/spa_r09/complete.json",
+    },
+    TranslationDef {
+        alias: "LSG",
+        helloao_id: "fra_lsg",
+        name: "Louis Segond 1910",
+        english_name: "French Louis Segond 1910",
+        language: "fra",
+        direction: "ltr",
+        license: "Public Domain",
+        source_url: "https://bible.helloao.org/api/fra_lsg/complete.json",
+    },
+    TranslationDef {
+        alias: "LUT",
+        helloao_id: "deu_l12",
+        name: "Lutherbibel 1912",
+        english_name: "German Luther Bible 1912",
+        language: "deu",
+        direction: "ltr",
+        license: "Public Domain",
+        source_url: "https://bible.helloao.org/api/deu_l12/complete.json",
+    },
+    TranslationDef {
+        alias: "SBLGNT",
+        helloao_id: "grc_sbl",
+        name: "Η Καινή Διαθήκη",
+        english_name: "Greek SBL New Testament",
+        language: "grc",
+        direction: "ltr",
+        license: "CC BY-SA 4.0",
+        source_url: "https://bible.helloao.org/api/grc_sbl/complete.json",
+    },
+    TranslationDef {
+        alias: "WLC",
+        helloao_id: "heb_wlc",
+        name: "Westminster Leningrad Codex",
+        english_name: "Hebrew Westminster Leningrad Codex",
+        language: "heb",
+        direction: "rtl",
+        license: "Public Domain",
+        source_url: "https://bible.helloao.org/api/heb_wlc/complete.json",
+    },
 ];
 
 pub fn by_alias(alias: &str) -> Option<&'static TranslationDef> {
@@ -110,6 +160,11 @@ mod tests {
         assert!(by_alias("BSL").is_some());
         assert!(by_alias("BLT").is_some());
         assert!(by_alias("TFT").is_some());
+        assert!(by_alias("RVR09").is_some());
+        assert!(by_alias("LSG").is_some());
+        assert!(by_alias("LUT").is_some());
+        assert!(by_alias("SBLGNT").is_some());
+        assert!(by_alias("WLC").is_some());
         assert!(by_alias("XYZ").is_none());
     }
 

@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-05-10
+
+### Added
+
+- **5 new translations** expanding language support from 2 to 7 languages:
+  - `RVR09` (Spanish - Reina Valera 1909)
+  - `LSG` (French - Louis Segond 1910)
+  - `LUT` (German - Luther Bible 1912)
+  - `SBLGNT` (Ancient Greek - SBL Greek New Testament)
+  - `WLC` (Hebrew - Westminster Leningrad Codex)
+- **Configuration system** (`~/.faith/config.toml`) for persistent preferences:
+  - `faith config get` - Show current configuration
+  - `faith config set <key> <value>` - Set default language, translation, format, or seed
+  - `faith config path` - Show config file location
+  - `faith config reset --confirm` - Reset to defaults
+- **7-layer translation resolution** with automatic fallback:
+  1. CLI `--tr` flag (highest priority)
+  2. CLI `--lang` flag
+  3. `FAITH_LANG` environment variable
+  4. Config file `translation` preference
+  5. Config file `lang` preference
+  6. System locale detection (`LANG` env var)
+  7. Hardcoded default (KJV)
+- **Multi-language reference parsing** - Now supports Spanish, French, German, Greek, and Hebrew book names
+  - Examples: `"Juan 3:16"` (Spanish), `"Jean 3:16"` (French), `"Johannes 3:16"` (German)
+  - Full alias support per language (e.g., `"Jn"`, `"Jua"`, `"Joh"`)
+- **Reference parser tests** for new languages (Spanish, French, German corpus tests)
+
+### Changed
+
+- Bumped version to `0.3.0` (Feature release)
+- Extended `BookEntry` struct with 7 language name fields and alias arrays
+- `alias_index()` now searches across all 7 supported languages simultaneously
+- `get`, `search`, `diff`, and `random` commands now respect config file preferences
+- Translation catalog expanded from 6 to 11 translations
+
+### Fixed
+
+- Config file parsing errors now gracefully fall back to defaults instead of crashing
+- Language resolution now properly cascades through all precedence layers
+
 ## [0.2.0] - 2026-05-09
 
 ### Added

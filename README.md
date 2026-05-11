@@ -51,18 +51,23 @@ You have access to the `faith` CLI, an offline, JSON-first tool for fetching and
 Always use `faith` instead of searching the web for Bible verses.
 
 **Key Commands:**
-- `faith manifest` - Call this ONCE at startup. It returns a JSON of all installed tools, translations (`KJV`, `ONBV`, `BLJ`, etc.), and available commands.
-- `faith get <ref> [--tr ID] [--lang pt|en]` - Fetch a verse or range (e.g., `faith get "John 3:16-18" --lang en`). Outputs JSON.
-- `faith search <query> [--tr ID] [--lang pt|en] [--limit 10]` - Perform a full-text BM25 search. Outputs ranked snippets.
+- `faith manifest` - Call this ONCE at startup. It returns a JSON of all installed tools, translations (`KJV`, `ONBV`, `RVR09`, `LSG`, `LUT`, `SBLGNT`, `WLC`, etc.), and available commands.
+- `faith get <ref> [--tr ID] [--lang CODE]` - Fetch a verse or range (e.g., `faith get "John 3:16-18" --lang en`). Outputs JSON.
+- `faith search <query> [--tr ID] [--lang CODE] [--limit 10]` - Perform a full-text BM25 search. Outputs ranked snippets.
 - `faith diff <ref> --tr ID1,ID2` - Compare a verse across multiple translations side-by-side.
-- `faith random [--lang pt|en] [--scope ot|nt]` - Get a random verse (useful for daily devotionals or random seeds).
+- `faith random [--lang CODE] [--scope ot|nt]` - Get a random verse (useful for daily devotionals or random seeds).
 - `faith install <ID1> <ID2>` - If a translation is missing, check `available_translations` in the manifest and install it.
+- `faith config set lang <CODE>` - Set default language preference to avoid passing `--lang` every time.
+
+**Supported Languages (--lang):**
+- `en` (English), `pt` (Portuguese), `es` (Spanish), `fr` (French), `de` (German), `grc` (Greek), `he` (Hebrew)
 
 **Rules:**
 1. Default output is always JSON (`faith.v1` schema). Do not try to parse it as raw text unless you pass `--format text`.
 2. For multiple verses, pass ranges like `"Gen 1:1-5"`. Max limit is 500 verses.
-3. You can resolve translations by language directly using `--lang pt` or `--lang en` if you don't know the exact translation ID.
-4. Bible book references are extremely flexible (e.g., `1 Coríntios 13`, `Jn 3.16`, `רומיים ח:כח`).
+3. You can resolve translations by language directly using `--lang pt` or `--lang es` if you don't know the exact translation ID.
+4. Bible book references are extremely flexible and multilingual (e.g., `1 Coríntios 13`, `Juan 3:16`, `Jean 3:16`, `Johannes 3:16`, `Ἰωάννης 3:16`, `בראשית 1:1`).
+5. Set a default language once with `faith config set lang pt` to avoid passing `--lang` on every command.
 ```
 </details>
 
@@ -115,6 +120,47 @@ faith search "shepherd" --lang en --limit 5
 faith search "amor" --tr ONBV --format text
 ```
 
+### Multi-Language Support
+```bash
+# Spanish reference
+faith get "Juan 3:16" --lang es
+
+# French reference
+faith get "Jean 3:16" --lang fr
+
+# German reference
+faith get "Johannes 3:16" --lang de
+
+# Greek (New Testament)
+faith get "Ἰωάννης 3:16" --lang grc
+
+# Hebrew (Old Testament)
+faith get "בראשית 1:1" --lang he
+```
+
+### Configuration
+```bash
+# Set default language (no more --lang flags!)
+faith config set lang pt
+
+# Set default translation
+faith config set translation ONBV
+
+# Set default output format
+faith config set format json
+
+# View current config
+faith config get
+
+# Show config file location
+faith config path
+
+# Reset to defaults
+faith config reset --confirm
+```
+
+**Precedence**: CLI flags > `FAITH_LANG` env > config file > system locale > default (KJV)
+
 ### Random Verse
 ```bash
 faith random --tr ONBV --scope nt
@@ -155,7 +201,8 @@ faith random --lang pt --scope nt
 | Full-text FTS5 Search (BM25)      | ✅                     | varies                  |
 | Canonical USFM refs (`JHN/3/16`)  | ✅                     | ❌                      |
 | Multi-translation parallel diff   | ✅                     | ❌                      |
-| Multi-locale ref parser           | ✅                     | ❌                      |
+| Multi-locale ref parser (7 langs) | ✅                     | ❌                      |
+| Persistent config (`~/.faith`)    | ✅                     | varies                  |
 | Deterministic via `--seed`        | ✅                     | ❌                      |
 | Cold start                        | **~50 ms** (Rust)      | Slower (Node/Python)    |
 | Cross-chapter ranges              | ✅                     | varies                  |
@@ -173,9 +220,14 @@ faith random --lang pt --scope nt
 
 Data is seeded from the [Free Use Bible API](https://bible.helloao.org) (HelloAOLab). The API is completely free, offline-first, and respects individual translation licenses.
 
-Currently available translations (v0.2.0):
+Currently available translations (v0.3.0):
 - **English:** `KJV`
 - **Portuguese:** `ONBV`, `BLJ`, `BSL`, `BLT`, `TFT`
+- **Spanish:** `RVR09`
+- **French:** `LSG`
+- **German:** `LUT`
+- **Greek:** `SBLGNT` (New Testament)
+- **Hebrew:** `WLC` (Old Testament)
 
 Run `faith manifest` to see the full list of available translations you can install via `faith install <ID>`.
 

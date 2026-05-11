@@ -7,3 +7,5 @@ Cargo.lock
 *.swp
 /tmp/
 /.faith/
+CLAUDE.md
+AGENTS.md

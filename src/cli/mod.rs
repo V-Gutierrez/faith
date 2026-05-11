@@ -28,6 +28,7 @@ pub enum OutputFormat {
 pub mod batch;
 pub mod cache;
 pub mod completions;
+pub mod config;
 pub mod diff;
 pub mod get;
 pub mod info;

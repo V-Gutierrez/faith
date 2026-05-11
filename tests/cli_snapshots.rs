@@ -616,15 +616,25 @@ fn search_finds_matching_verses() {
     let v: serde_json::Value = serde_json::from_str(&out).unwrap();
     assert_eq!(v["kind"], "search");
     assert!(v["total"].as_u64().unwrap() >= 1);
-    assert!(v["matches"][0]["snippet"].as_str().unwrap().contains("loved"));
+    assert!(v["matches"][0]["snippet"]
+        .as_str()
+        .unwrap()
+        .contains("loved"));
 }
 
 #[test]
 fn search_filter_by_translation() {
     let (s, _d) = fresh_store();
     let mut buf = Cursor::new(Vec::<u8>::new());
-    let code =
-        cli::search::run(&s, "loved", Some("KJV"), Some(5), OutputFormat::Json, &mut buf).unwrap();
+    let code = cli::search::run(
+        &s,
+        "loved",
+        Some("KJV"),
+        Some(5),
+        OutputFormat::Json,
+        &mut buf,
+    )
+    .unwrap();
     assert_eq!(code, 0);
     let out = String::from_utf8(buf.into_inner()).unwrap();
     let v: serde_json::Value = serde_json::from_str(&out).unwrap();
@@ -657,7 +667,8 @@ fn search_no_results() {
 fn search_text_format() {
     let (s, _d) = fresh_store();
     let mut buf = Cursor::new(Vec::<u8>::new());
-    let code = cli::search::run(&s, "shepherd", None, Some(5), OutputFormat::Text, &mut buf).unwrap();
+    let code =
+        cli::search::run(&s, "shepherd", None, Some(5), OutputFormat::Text, &mut buf).unwrap();
     assert_eq!(code, 0);
     let out = String::from_utf8(buf.into_inner()).unwrap();
     assert!(out.starts_with("Search:"));

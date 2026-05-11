@@ -130,9 +130,8 @@ impl Store {
             let mut stmt = tx.prepare(
                 "INSERT INTO verses (translation, book, chapter, verse, text) VALUES (?1,?2,?3,?4,?5)",
             )?;
-            let mut fts_stmt = tx.prepare(
-                "INSERT INTO verses_fts (rowid, text) VALUES (last_insert_rowid(), ?1)",
-            )?;
+            let mut fts_stmt = tx
+                .prepare("INSERT INTO verses_fts (rowid, text) VALUES (last_insert_rowid(), ?1)")?;
             for (book, chapter, verse, text) in verses {
                 stmt.execute(params![translation, book, chapter, verse, text])?;
                 fts_stmt.execute(params![text])?;

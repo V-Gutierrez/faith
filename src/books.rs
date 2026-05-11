@@ -42,7 +42,9 @@ pub fn aliases_lower(b: &BookEntry) -> Vec<String> {
             out.push(lo);
         }
     };
-    for a in b.aliases_en.iter()
+    for a in b
+        .aliases_en
+        .iter()
         .chain(b.aliases_pt.iter())
         .chain(b.aliases_es.iter())
         .chain(b.aliases_fr.iter())
@@ -79,7 +81,9 @@ pub fn alias_index() -> &'static HashMap<String, &'static str> {
             insert_alias(&mut m, b.name_grc, b.canonical_id);
             insert_alias(&mut m, b.name_heb, b.canonical_id);
             // Insert all aliases for all languages
-            for a in b.aliases_en.iter()
+            for a in b
+                .aliases_en
+                .iter()
                 .chain(b.aliases_pt.iter())
                 .chain(b.aliases_es.iter())
                 .chain(b.aliases_fr.iter())

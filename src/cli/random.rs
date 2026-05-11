@@ -158,4 +158,3 @@ fn default_seed() -> u64 {
         .map(|d| d.as_nanos() as u64)
         .unwrap_or(0xCAFE_BABE_DEAD_BEEF)
 }
-

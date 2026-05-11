@@ -105,7 +105,10 @@ mod tests {
 
         assert_eq!(deserialized.config_version, "1.0");
         assert_eq!(deserialized.preferences.lang, Some("pt".to_string()));
-        assert_eq!(deserialized.preferences.translation, Some("ONBV".to_string()));
+        assert_eq!(
+            deserialized.preferences.translation,
+            Some("ONBV".to_string())
+        );
         assert_eq!(deserialized.preferences.seed, Some(42));
         assert_eq!(deserialized.search.limit, Some(20));
     }

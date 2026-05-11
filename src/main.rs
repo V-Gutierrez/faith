@@ -395,7 +395,11 @@ fn handle_config(action: ConfigAction, out: &mut dyn Write) -> Result<i32, Faith
                 // Show specific key
                 let value = match k.as_str() {
                     "lang" => config.preferences.lang.as_deref().unwrap_or("(not set)"),
-                    "translation" => config.preferences.translation.as_deref().unwrap_or("(not set)"),
+                    "translation" => config
+                        .preferences
+                        .translation
+                        .as_deref()
+                        .unwrap_or("(not set)"),
                     "format" => config.preferences.format.as_deref().unwrap_or("(not set)"),
                     "seed" => {
                         if let Some(s) = config.preferences.seed {
@@ -425,7 +429,8 @@ fn handle_config(action: ConfigAction, out: &mut dyn Write) -> Result<i32, Faith
                 "translation" => cfg.preferences.translation = Some(value.clone()),
                 "format" => cfg.preferences.format = Some(value.clone()),
                 "seed" => {
-                    let seed = value.parse::<u64>()
+                    let seed = value
+                        .parse::<u64>()
                         .map_err(|_| FaithError::Io(format!("Invalid seed value: {}", value)))?;
                     cfg.preferences.seed = Some(seed);
                 }

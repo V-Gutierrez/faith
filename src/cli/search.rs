@@ -67,7 +67,11 @@ pub fn run<W: Write>(
             } else {
                 "\t"
             };
-            writeln!(out, "translation{}book{}chapter{}verse{}snippet", sep, sep, sep, sep)?;
+            writeln!(
+                out,
+                "translation{}book{}chapter{}verse{}snippet",
+                sep, sep, sep, sep
+            )?;
             for m in &search_out.matches {
                 let snippet = if matches!(format, OutputFormat::Csv) {
                     format!("\"{}\"", m.snippet.replace('"', "\"\""))

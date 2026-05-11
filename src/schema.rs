@@ -270,7 +270,12 @@ pub fn tool_inventory_v1() -> Vec<ToolInfo> {
         },
         ToolInfo {
             name: "random".into(),
-            args: vec!["tr?".into(), "lang?".into(), "book?".into(), "scope?".into()],
+            args: vec![
+                "tr?".into(),
+                "lang?".into(),
+                "book?".into(),
+                "scope?".into(),
+            ],
         },
         ToolInfo {
             name: "diff".into(),
@@ -282,7 +287,12 @@ pub fn tool_inventory_v1() -> Vec<ToolInfo> {
         },
         ToolInfo {
             name: "search".into(),
-            args: vec!["query".into(), "tr?".into(), "lang?".into(), "limit?".into()],
+            args: vec![
+                "query".into(),
+                "tr?".into(),
+                "lang?".into(),
+                "limit?".into(),
+            ],
         },
         ToolInfo {
             name: "completions".into(),

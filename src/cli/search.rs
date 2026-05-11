@@ -76,7 +76,7 @@ pub fn run<W: Write>(
                 let snippet = if matches!(format, OutputFormat::Csv) {
                     format!("\"{}\"", m.snippet.replace('"', "\"\""))
                 } else {
-                    m.snippet.replace('\t', " ").replace('\n', " ")
+                    m.snippet.replace(['\t', '\n'], " ")
                 };
                 writeln!(
                     out,

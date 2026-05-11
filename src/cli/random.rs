@@ -22,6 +22,7 @@ pub enum Scope {
 ///
 /// Resolution priority: `--tr` > `--lang` > default `KJV`.
 /// `--lang` accepts ISO 639-2 (`pt`, `en`) or ISO 639-3 (`por`, `eng`).
+#[allow(clippy::too_many_arguments)]
 pub fn run<W: Write>(
     store: &Store,
     translation: Option<&str>,
